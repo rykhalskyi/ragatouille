@@ -2,7 +2,7 @@
 <main class="content">
   <div class="main-container">
     <app-topic-list class="topic-list"></app-topic-list>
-    <div class="vertical-divider"></div>
+    <div class="vertical-divider" (mousedown)="startDragging($event)"></div>
     <app-selected-topic class="selected-topic"></app-selected-topic>
   </div>
 </main>
