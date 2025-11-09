@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { TopbarComponent } from "./topbar/topbar.component";
 import { TopicListComponent } from './topic-list/topic-list.component';
 import { SelectedTopicComponent } from './selected-topic/selected-topic.component';
+import { OpenAPI } from './client';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,9 @@ export class AppComponent {
 
   isDragging = false;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  constructor(private el: ElementRef, private renderer: Renderer2) {
+    OpenAPI.BASE = "http://127.0.0.1:8000";
+  }
 
   startDragging(event: MouseEvent) {
     this.isDragging = true;
