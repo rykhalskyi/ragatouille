@@ -46,6 +46,20 @@
     grid-row: 3;
 }
 
+.description-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+
+  .gray {
+    color: var(--mat-sys-secondary)
+  }
+
 /* Responsive: stack columns on small screens */
 @media (max-width: 640px) {
     .selected-collection-container {

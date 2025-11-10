@@ -9,6 +9,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CollectionsService } from '../client/services/CollectionsService';
 import { Collection } from '../client/models/Collection';
 import { MatIconModule } from '@angular/material/icon';
+import { CollectionRefreshService } from '../collection-refresh.service';
 
 @Component({
   selector: 'app-selected-collection',
@@ -21,8 +22,14 @@ import { MatIconModule } from '@angular/material/icon';
 export class SelectedCollectionComponent implements OnInit {
   collection: Collection | undefined;
   isEnabled: boolean = false;
+  isEditingDescription = false;
+  editedDescription = '';
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(
+    private route: ActivatedRoute, 
+    private router: Router,
+    private collectionRefreshService: CollectionRefreshService
+  ) {}
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -36,8 +43,6 @@ export class SelectedCollectionComponent implements OnInit {
   async fetchCollectionDetails(collectionId: string): Promise<void> {
     try {
       this.collection = await CollectionsService.readCollectionCollectionsCollectionIdGet(collectionId);
-      // Assuming 'enabled' is a property of the Collection model
-      // If not, you might need to add it to the Collection model or handle it differently
       this.isEnabled = this.collection?.enabled || false;
     } catch (error) {
       console.error('Error fetching collection details:', error);
@@ -47,12 +52,11 @@ export class SelectedCollectionComponent implements OnInit {
   async onToggleChange(): Promise<void> {
     if (this.collection) {
       try {
-        // Assuming 'enabled' is a property of the CollectionCreate model
         await CollectionsService.updateExistingCollectionCollectionsCollectionIdPut(this.collection.id, { name: this.collection.name, enabled: this.isEnabled });
         console.log('Collection enabled status updated.');
+        this.collectionRefreshService.triggerRefresh();
       } catch (error) {
         console.error('Error updating collection enabled status:', error);
-        // Revert toggle state if update fails
         this.isEnabled = !this.isEnabled;
       }
     }
@@ -63,9 +67,37 @@ export class SelectedCollectionComponent implements OnInit {
       try {
         await CollectionsService.deleteExistingCollectionCollectionsCollectionIdDelete(this.collection.id);
         console.log('Collection deleted successfully.');
-        this.router.navigate(['/']); // Navigate back to the collections list
+        this.collectionRefreshService.triggerRefresh();
+        this.router.navigate(['/']); 
       } catch (error) {
         console.error('Error deleting collection:', error);
+      }
+    }
+  }
+
+  startEditingDescription(): void {
+    this.isEditingDescription = true;
+    this.editedDescription = this.collection?.description || '';
+  }
+
+  cancelEditingDescription(): void {
+    this.isEditingDescription = false;
+  }
+
+  async saveDescription(): Promise<void> {
+    if (this.collection) {
+      try {
+        await CollectionsService.updateExistingCollectionCollectionsCollectionIdPut(this.collection.id, {
+          name: this.collection.name,
+          description: this.editedDescription,
+        });
+        if(this.collection) {
+          this.collection.description = this.editedDescription;
+        }
+        this.isEditingDescription = false;
+        this.collectionRefreshService.triggerRefresh();
+      } catch (error) {
+        console.error('Error updating collection description:', error);
       }
     }
   }
