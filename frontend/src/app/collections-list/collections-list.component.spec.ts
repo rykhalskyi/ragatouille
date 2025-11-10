@@ -16,7 +16,9 @@ describe('CollectionsListComponent', () => {
       triggerRefresh: jasmine.createSpy('triggerRefresh')
     };
 
-    spyOn(CollectionsService, 'readCollectionsCollectionsGet').and.returnValue(Promise.resolve([]));
+    spyOn(CollectionsService, 'readCollectionsCollectionsGet').and.returnValue(
+      Promise.resolve([]) as unknown as ReturnType<typeof CollectionsService.readCollectionsCollectionsGet>
+    );
 
     await TestBed.configureTestingModule({
       imports: [CollectionsListComponent, RouterTestingModule],
