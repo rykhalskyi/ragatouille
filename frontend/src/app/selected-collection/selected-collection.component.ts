@@ -10,11 +10,13 @@ import { CollectionsService } from '../client/services/CollectionsService';
 import { Collection } from '../client/models/Collection';
 import { MatIconModule } from '@angular/material/icon';
 import { CollectionRefreshService } from '../collection-refresh.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog/delete-confirmation-dialog.component';
 
 @Component({
   selector: 'app-selected-collection',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatIconModule, MatDialogModule],
   templateUrl: './selected-collection.component.html',
   styleUrl: './selected-collection.component.scss'
 })
@@ -28,7 +30,8 @@ export class SelectedCollectionComponent implements OnInit {
   constructor(
     private route: ActivatedRoute, 
     private router: Router,
-    private collectionRefreshService: CollectionRefreshService
+    private collectionRefreshService: CollectionRefreshService,
+    public dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -63,16 +66,26 @@ export class SelectedCollectionComponent implements OnInit {
   }
 
   async deleteCollection(): Promise<void> {
-    if (this.collection && confirm(`Are you sure you want to delete collection "${this.collection.name}"?`)) {
-      try {
-        await CollectionsService.deleteExistingCollectionCollectionsCollectionIdDelete(this.collection.id);
-        console.log('Collection deleted successfully.');
-        this.collectionRefreshService.triggerRefresh();
-        this.router.navigate(['/']); 
-      } catch (error) {
-        console.error('Error deleting collection:', error);
+    if (!this.collection) return;
+
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      data: { collectionName: this.collection.name },
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        try {
+          if (this.collection) {
+            await CollectionsService.deleteExistingCollectionCollectionsCollectionIdDelete(this.collection.id);
+            console.log('Collection deleted successfully.');
+            this.collectionRefreshService.triggerRefresh();
+            this.router.navigate(['/']);
+          }
+        } catch (error) {
+          console.error('Error deleting collection:', error);
+        }
       }
-    }
+    });
   }
 
   startEditingDescription(): void {
