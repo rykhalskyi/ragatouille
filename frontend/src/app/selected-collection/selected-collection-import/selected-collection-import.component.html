@@ -2,8 +2,8 @@
   <div class="column1">
     <mat-form-field appearance="fill">
       <mat-label>Select Import Type</mat-label>
-      <mat-select formControlName="importType">
-        <mat-option *ngFor="let type of importTypes" [value]="type">{{ type.name }}</mat-option>
+      <mat-select formControlName="importType" [compareWith]="compareImportTypes">
+        <mat-option *ngFor="let type of importTypes; trackBy: trackByImportType" [value]="type">{{ type.name }}</mat-option>
       </mat-select>
       <mat-error *ngIf="importForm.get('importType')?.hasError('required') && importForm.get('importType')?.touched">
         Import type is required.
@@ -16,7 +16,8 @@
   <div class="column2">
 
   <div class="file-input-container">
-    <button mat-raised-button color="primary" (click)="fileInput.click()">Pick File</button>
+    <button mat-raised-button color="primary" type="button" (click)="fileInput.click()" 
+            [disabled]="canOpenfile()" >Pick File</button>
     <input hidden type="file" #fileInput (change)="onFileSelected($event)">
     <span class="file-name">{{ selectedFileName || 'No file chosen' }}</span>
     <mat-error *ngIf="importForm.get('file')?.hasError('required') && importForm.get('file')?.touched">

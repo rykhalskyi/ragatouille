@@ -1,16 +1,18 @@
-import { ChangeDetectionStrategy, Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'; // Import ReactiveFormsModule
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ImportService } from '../../client/services/ImportService';
 import { Import } from '../../client/models/Import';
-import { Collection } from '../../client/models/Collection';
+import { ImportFormStateService } from '../../import-form-state.service';
+
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Body_import_file_import__collection_id__post } from '../../client/models/Body_import_file_import__collection_id__post';
+import { ExtendedCollection } from '../selected-collection.component';
 
 @Component({
   selector: 'app-selected-collection-import',
@@ -21,7 +23,7 @@ import { Body_import_file_import__collection_id__post } from '../../client/model
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
-    ReactiveFormsModule // Use ReactiveFormsModule for form group
+    ReactiveFormsModule
   ],
   templateUrl: './selected-collection-import.component.html',
   styleUrl: './selected-collection-import.component.scss',
@@ -30,15 +32,18 @@ import { Body_import_file_import__collection_id__post } from '../../client/model
 
 @UntilDestroy()
 export class SelectedCollectionImportComponent implements OnInit, OnChanges {
-  @Input() collection: Collection | undefined;
+  @Input() collection: ExtendedCollection | undefined;
+  @ViewChild('fileInput') fileInput!: ElementRef;
 
   importForm!: FormGroup;
   importTypes: Import[] = [];
   selectedFileName: string = '';
   selectedFile: File | null = null;
 
+
   constructor(
     private fb: FormBuilder,
+    private importFormStateService: ImportFormStateService,
   ) {}
 
   ngOnInit(): void {
@@ -47,45 +52,110 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges {
       model: ['', Validators.required],
       chunkSize: [null, [Validators.required, Validators.min(1)]],
       chunkOverlap: [null, [Validators.required, Validators.min(0)]],
-      file: [null, Validators.required] // Add file control
+      file: [null, Validators.required]
     });
 
     this.getImportTypes();
-    this.updateFormState();
 
     this.importForm.get('importType')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
-      this.onFormChange();
-    });
+        this.onFormChange();
+      });
 
-    this.setControls();
+    this.importForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((a) => {
+        console.log('for changed. saving state');
+        this.importFormStateService.setState(this.collection!.id, this.importForm.getRawValue());
+      });
+
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.setControls();
+    if (changes['collection'] && this.collection) {
+      const collectionId = this.collection.id;
+      const state = this.importFormStateService.getState(collectionId);
+      console.log('**on changes', state, this.collection);
+      
+      //Clean selected file
+      this.selectedFile = null;
+      this.selectedFileName = '';
+      this.fileInput.nativeElement.value = '';
+      this.importForm.get('file')?.updateValueAndValidity();
 
+      //Enable/Disable controls
+      if (this.collectionIsSet()){
+        this.importForm.get('importType')?.disable({ emitEvent: false });
+        this.importForm.get('model')?.disable({ emitEvent: false });
+      }
+      else{
+        this.importForm.get('importType')?.enable({ emitEvent: false });
+        this.importForm.get('model')?.enable({ emitEvent: false });
+      }
+
+      //Set or create state
+      if (state) {
+        console.log('patch state:',collectionId, state);
+        this.importForm.patchValue(state, { emitEvent: false });
+      }
+      else if (this.collectionIsSet()) {
+        const importType = this.importTypes.find(i => i.name === this.collection!.import_type);
+        const initialState = {
+          importType: importType,
+          model: this.collection!.model,
+          chunkSize: this.collection!.chunk_size,
+          chunkOverlap: this.collection!.chunk_overlap,
+          file: null
+        };
+
+        this.importForm.patchValue(initialState, { emitEvent: false });
+        this.importFormStateService.setState(collectionId, this.importForm.getRawValue());
+
+      }
+      else {
+        this.importForm.reset({
+          importType: '',
+          model: '',
+          chunkSize: null,
+          chunkOverlap: null,
+          file: null,
+        }, { emitEvent: false });
+        this.importFormStateService.clearState(collectionId);
+      }
+    }
   }
 
   onFormChange(): void {
     if (!this.collectionIsSet())
     {
      const importType = this.importForm.get('importType')?.value;
-     this.importForm.get('model')?.setValue(importType.embedding_model);
-     this.importForm.get('chunkSize')?.setValue(importType.chunk_size);
-     this.importForm.get('chunkOverlap')?.setValue(importType.chunk_overlap);
+     if (importType) {
+       this.importForm.get('model')?.setValue(importType.embedding_model);
+       this.importForm.get('chunkSize')?.setValue(importType.chunk_size);
+       this.importForm.get('chunkOverlap')?.setValue(importType.chunk_overlap);
+     }
     }
   }
 
   getImportTypes(): void {
     ImportService.getImportsImportGet().then(
       (data: Import[]) => {
-        console.log('got data:', data);
         this.importTypes = data;
+        // After getting import types, re-evaluate the form state
+        if (this.collection) {
+          this.ngOnChanges({
+            collection: {
+              currentValue: this.collection,
+              previousValue: undefined,
+              firstChange: true,
+              isFirstChange: () => true
+            }
+          });
+        }
       },
       (error: any) => {
         console.error('Error fetching import types:', error);
-        // Handle error appropriately
       }
     );
   }
@@ -106,65 +176,48 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges {
     }
   }
 
-  updateFormState(): void {
-    // Logic to disable "Import" button
-    // This is handled by [disabled]="importForm.invalid" in the template
-  }
-
   onSubmit(): void {
     if (this.importForm.valid && this.collection?.name && this.selectedFile) {
+      const formValue = this.importForm.getRawValue();
       const formData: Body_import_file_import__collection_id__post = {
         file: this.selectedFile,
         import_params: JSON.stringify({
-             name: this.importForm.get('importType')?.value.name,
-             embedding_model: this.importForm.get('model')?.value,
-             chunk_size: this.importForm.get('chunkSize')?.value,
-             chunk_overlap: this.importForm.get('chunkOverlap')?.value
+             name: formValue.importType.name,
+             embedding_model: formValue.model,
+             chunk_size: formValue.chunkSize,
+             chunk_overlap: formValue.chunkOverlap
         })
       };
 
-      console.log('save request:',this.collection.name, this.collection.id, formData);
       ImportService.importFileImportCollectionIdPost(
-        this.collection.id, 
+        this.collection.id,
         formData
       ).then(
         (response: any) => {
           console.log('File imported successfully:', response);
-          // TODO: Show success message to user
-          // TODO: Refresh collection data or navigate
         },
         (error: any) => {
           console.error('Error importing file:', error);
-          // TODO: Show error message to user
         }
       );
     } else {
       console.error('Form is invalid or collection name/file is missing.');
-      // TODO: Show validation errors to user
     }
   }
 
-  private setControls(): void{
-    console.log('Set Controls', this.collection);
-      if (this.collectionIsSet()) {
-        
-        const importType = this.importTypes.find(i=> i.name === this.collection!.import_type);
-
-        this.importForm.get('importType')?.setValue(importType);
-        this.importForm.get('chunkSize')?.setValue(this.collection!.chunk_size);
-        this.importForm.get('chunkOverlap')?.setValue(this.collection!.chunk_overlap);
-        this.importForm.get('model')?.setValue(this.collection!.model);  
-
-        this.importForm.get('importType')?.disable();
-        this.importForm.get('model')?.disable();
-    }
-    else{
-        this.importForm.get('importType')?.enable();
-        this.importForm.get('model')?.enable();
-    }
+  compareImportTypes(o1: Import, o2: Import): boolean {
+    return o1 && o2 ? o1.name === o2.name : o1 === o2;
   }
 
-  private collectionIsSet(): boolean{
-    return (this.collection?.import_type && this.collection.import_type !== 'NONE') ?? false;
+  trackByImportType(index: number, item: Import): string {
+    return item.name;
+  }
+
+  protected canOpenfile():boolean {
+    return this.importForm.get('importType')?.value.name !== 'FILE';
+  }
+
+  private collectionIsSet(): boolean {
+    return (this.collection?.saved) ?? false;
   }
 }

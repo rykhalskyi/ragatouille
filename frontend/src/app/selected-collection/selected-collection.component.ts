@@ -14,6 +14,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog/delete-confirmation-dialog.component';
 import { SelectedCollectionImportComponent } from './selected-collection-import/selected-collection-import.component';
 
+export interface ExtendedCollection extends Collection {
+  saved: boolean;
+}
+
 @Component({
   selector: 'app-selected-collection',
   standalone: true,
@@ -23,7 +27,7 @@ import { SelectedCollectionImportComponent } from './selected-collection-import/
 })
 
 export class SelectedCollectionComponent implements OnInit {
-  collection: Collection | undefined;
+  collection: ExtendedCollection | undefined;
   isEnabled: boolean = false;
   isEditingDescription = false;
   editedDescription = '';
@@ -46,7 +50,13 @@ export class SelectedCollectionComponent implements OnInit {
 
   async fetchCollectionDetails(collectionId: string): Promise<void> {
     try {
-      this.collection = await CollectionsService.readCollectionCollectionsCollectionIdGet(collectionId);
+      const collection = await CollectionsService.readCollectionCollectionsCollectionIdGet(collectionId);
+
+       this.collection = {
+        ...collection,
+        saved: collection.import_type !== 'NONE',
+      };
+
       this.isEnabled = this.collection?.enabled || false;
     } catch (error) {
       console.error('Error fetching collection details:', error);
