@@ -1,12 +1,16 @@
 import sqlite3
 from sqlite3 import Connection
+import sys
+import threading
 
 DATABASE_URL = "ragatouille.db"
+lock = threading.Lock()
 
 def get_db_connection() -> Connection:
-    conn = sqlite3.connect(DATABASE_URL)
-    conn.row_factory = sqlite3.Row
-    return conn
+    with lock:
+        conn = sqlite3.connect(DATABASE_URL, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def create_tables():
     conn = get_db_connection()
@@ -20,7 +24,8 @@ def create_tables():
         model TEXT,
         chunk_size INTEGER,
         chunk_overlap INTEGER,
-        enabled BOOLEAN
+        enabled BOOLEAN,
+        import_type TEXT DEFAULT 'NONE'
     )
     """)
 
