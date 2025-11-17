@@ -1,4 +1,4 @@
-# RAGatouille: Local RAG & MCP Solution
+# RAGatouille: Local RAG & MCP Servers Solution
 
 ## Project Overview
 
