@@ -1,10 +1,22 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 import asyncio
+from typing import List
+from sqlite3 import Connection
 
 from app.internal.message_hub import message_hub
+from app.dependencies import get_db
+from app.crud import crud_log
+from app.schemas.mcp import Message
 
 router = APIRouter()
+
+@router.get("/", response_model=List[Message])
+def read_logs(n: int = 10, db: Connection = Depends(get_db)):
+    """
+    Retrieve the latest n log entries.
+    """
+    return crud_log.get_latest_log_entries(db=db, n=n)
 
 async def event_generator(request: Request):
     while True:

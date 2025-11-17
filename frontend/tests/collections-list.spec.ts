@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('CollectionsListComponent', () => {
   test.beforeEach(async ({ page }) => {
     // Mock the API call to get collections
-    await page.route('**/api/v1/collections/', async route => {
+    await page.route('**/collection/', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -35,7 +35,7 @@ test.describe('CollectionsListComponent', () => {
   });
 
   test('should add a new collection', async ({ page }) => {
-    await page.route('POST', '**/api/v1/collections/', async route => {
+    await page.route( '**/collection/', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

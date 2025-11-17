@@ -13,6 +13,8 @@ import { CollectionRefreshService } from '../collection-refresh.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog/delete-confirmation-dialog.component';
 import { SelectedCollectionImportComponent } from './selected-collection-import/selected-collection-import.component';
+import { LogsViewComponent } from '../logs-view/logs-view';
+
 
 export interface ExtendedCollection extends Collection {
   saved: boolean;
@@ -21,7 +23,18 @@ export interface ExtendedCollection extends Collection {
 @Component({
   selector: 'app-selected-collection',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatIconModule, MatDialogModule, SelectedCollectionImportComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSlideToggleModule,
+    MatIconModule,
+    MatDialogModule,
+    SelectedCollectionImportComponent,
+    LogsViewComponent // Add LogsViewComponent here
+  ],
   templateUrl: './selected-collection.component.html',
   styleUrl: './selected-collection.component.scss'
 })
