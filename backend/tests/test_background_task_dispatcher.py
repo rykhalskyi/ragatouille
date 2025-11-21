@@ -17,7 +17,8 @@ def cancellable_dummy_task(collection_id: str, duration, cancel_event: threading
 class TestBackgroundTaskDispatcher(unittest.TestCase):
     def test_enqueue_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task"
@@ -37,7 +38,8 @@ class TestBackgroundTaskDispatcher(unittest.TestCase):
 
     def test_cancel_queued_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task_queued"
@@ -64,7 +66,8 @@ class TestBackgroundTaskDispatcher(unittest.TestCase):
 
     def test_cancel_running_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task_running"

@@ -28,24 +28,26 @@ async def test_import_file_background_task():
     file_buffer = io.BytesIO(file_content)
     mock_file = UploadFile(filename="test.txt", file=file_buffer)
 
-    # 3. Mock the BackgroundTaskDispatcher
+    # 3. Mock the BackgroundTaskDispatcher and MessageHub
     mock_task_dispatcher = MagicMock()
+    mock_message_hub = MagicMock()
 
     # 4. Patch the dependencies
     with patch("app.database.get_db_connection", return_value=in_memory_conn), \
          patch("app.routers.imports.crud_collection", mock_crud_collection), \
-         patch("app.routers.imports.task_dispatcher", mock_task_dispatcher):
-
+         patch("app.dependencies.get_task_dispatcher", return_value=mock_task_dispatcher), \
+         patch("app.dependencies.get_message_hub", return_value=mock_message_hub):    
         create_tables()  # Create tables in the in-memory db
-
+    
         # 5. Call the endpoint function
         response = await import_file(
             collection_id="test_collection",
             import_params='{"name": "FILE", "embedding_model": "all-MiniLM-L6-v2", "chunk_size": 300, "chunk_overlap": 50}',
             file=mock_file,
-            db=mock_db
+            db=mock_db,
+            task_dispatcher=mock_task_dispatcher,
+            message_hub=mock_message_hub
         )
-
         # 6. Assert that the background task was added
         mock_task_dispatcher.add_task.assert_called_once()
         
@@ -65,8 +67,10 @@ async def test_import_file_background_task():
         await importer.import_data(
             collection_id=args[0], # Pass collection_id
             collection_name=args[3], # Pass collection_name
-            file=args[4], # Pass file
+            file_name=mock_file.filename, # Pass file_name
+            file_content_bytes=file_content, # Pass file_content_bytes
             import_params=args[5],
+            message_hub=mock_message_hub, # Pass message_hub
             cancel_event=cancellation_event
         )
         
