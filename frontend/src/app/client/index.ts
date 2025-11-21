@@ -15,6 +15,7 @@ export type { Import } from './models/Import';
 export { ImportType } from './models/ImportType';
 export type { MCPEnabledRequest } from './models/MCPEnabledRequest';
 export type { Message } from './models/Message';
+export type { Task } from './models/Task';
 export type { ValidationError } from './models/ValidationError';
 
 export { CollectionsService } from './services/CollectionsService';

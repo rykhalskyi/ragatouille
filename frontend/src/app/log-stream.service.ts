@@ -13,6 +13,8 @@ export class LogStreamService {
   private eventSource: EventSource | undefined;
   private readonly SSE_URL = `${environment.apiUrl}/logs/stream`;
 
+  private initialLogs: LogEntry[] =[]
+
   constructor(private ngZone: NgZone) { // Inject LogsService
     this.connect();
   }
@@ -22,9 +24,9 @@ export class LogStreamService {
       // Fetch initial logs
       LogsService.readLogsLogsGet(25)      
         .then(initialLogs => {
-          this.ngZone.run(() => {
-            initialLogs.forEach(log => this.logSubject.next(log as LogEntry));
-          });
+          const logs: LogEntry[] = [];
+          initialLogs.forEach(log => logs.push(log as LogEntry));
+          this.initialLogs = logs;
         })
         .catch(error => console.error('Error fetching initial logs:', error));
 
@@ -33,6 +35,7 @@ export class LogStreamService {
       this.eventSource.onmessage = (event) => {
         this.ngZone.run(() => {
           const data = JSON.parse(event.data);
+          console.log('----- message from source ----', data)
           this.logSubject.next(data as LogEntry);
         });
       };
@@ -55,4 +58,9 @@ export class LogStreamService {
     this.eventSource?.close();
     console.log('SSE connection closed.');
   }
+
+  getInitialLogs(): LogEntry[] {
+    return this.initialLogs
+  }
+
 }

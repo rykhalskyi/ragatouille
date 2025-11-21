@@ -5,3 +5,4 @@ class MessageType(Enum):
     INFO = 2
     LOCK = 3
     UNLOCK = 4
+    TASK = 5

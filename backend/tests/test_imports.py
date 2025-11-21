@@ -7,10 +7,14 @@ from fastapi import UploadFile
 from app.routers.imports import import_file
 from app.models.imports import FileImport
 from app.database import create_tables # New import
+import sqlite3
+
 
 @pytest.mark.asyncio
 async def test_import_file_background_task():
-    create_tables() # Call create_tables at the beginning of the test
+    # Set up an in-memory SQLite database for this test
+    in_memory_conn = sqlite3.connect(":memory:")
+    in_memory_conn.row_factory = sqlite3.Row  # Ensure rows are dict-like
 
     # 1. Mock the database connection and CRUD operations
     mock_db = MagicMock()
@@ -28,9 +32,11 @@ async def test_import_file_background_task():
     mock_task_dispatcher = MagicMock()
 
     # 4. Patch the dependencies
-    with patch("app.routers.imports.get_db_connection", return_value=mock_db), \
+    with patch("app.database.get_db_connection", return_value=in_memory_conn), \
          patch("app.routers.imports.crud_collection", mock_crud_collection), \
          patch("app.routers.imports.task_dispatcher", mock_task_dispatcher):
+
+        create_tables()  # Create tables in the in-memory db
 
         # 5. Call the endpoint function
         response = await import_file(
@@ -44,7 +50,7 @@ async def test_import_file_background_task():
         mock_task_dispatcher.add_task.assert_called_once()
         
         # 7. Get the arguments passed to the background task
-        args = mock_task_dispatcher.add_task.call_args[0]
+        args, kwargs = mock_task_dispatcher.add_task.call_args
         
         # The arguments passed to import_data are now:
         # collection_id (args[0])
@@ -60,6 +66,7 @@ async def test_import_file_background_task():
             collection_id=args[0], # Pass collection_id
             collection_name=args[3], # Pass collection_name
             file=args[4], # Pass file
+            import_params=args[5],
             cancel_event=cancellation_event
         )
         
@@ -69,3 +76,5 @@ async def test_import_file_background_task():
         
         # 11. Check the response
         assert response == {"message": "File import started in the background."}
+    
+    in_memory_conn.close() # Close the in-memory database connection

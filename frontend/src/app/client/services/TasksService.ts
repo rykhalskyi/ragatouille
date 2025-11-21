@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Task } from '../models/Task';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -24,6 +25,17 @@ export class TasksService {
             errors: {
                 422: `Validation Error`,
             },
+        });
+    }
+    /**
+     * Get Tasks
+     * @returns Task Successful Response
+     * @throws ApiError
+     */
+    public static getTasksTasksTasksGet(): CancelablePromise<Array<Task>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/tasks/tasks',
         });
     }
 }

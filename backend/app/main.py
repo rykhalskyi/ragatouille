@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables
 from contextlib import asynccontextmanager
 from app.internal.mcp_manager import MCPManager
+from app.crud import crud_task
 
 # Get the singleton instance of MCPManager
 mcp_manager = MCPManager()
@@ -14,6 +15,8 @@ async def lifespan(app: FastAPI):
     # Startup: create tables if they don't exist
     create_tables()
    
+    #Clear tasks if application crashed and them left in db
+    crud_task.delete_all_tasks()
     mcp_manager.enable()
     
     yield

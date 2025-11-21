@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Connection
 import sys
 import threading
+from typing import Optional
 
 DATABASE_URL = "ragatouille.db"
 lock = threading.Lock()
@@ -12,9 +13,15 @@ def get_db_connection() -> Connection:
         conn.row_factory = sqlite3.Row
         return conn
 
-def create_tables():
-    conn = get_db_connection()
+def create_tables(conn: Optional[Connection] = None):
+    if conn is None:
+        conn = get_db_connection()
+        close_conn = True
+    else:
+        close_conn = False
+        
     cursor = conn.cursor()
+    
     
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS collections (
@@ -25,8 +32,7 @@ def create_tables():
         chunk_size INTEGER,
         chunk_overlap INTEGER,
         enabled BOOLEAN,
-        import_type TEXT DEFAULT 'NONE',
-        locked BOOLEAN
+        import_type TEXT DEFAULT 'NONE'
     )
     """)
 
@@ -46,12 +52,14 @@ def create_tables():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         collectionId TEXT,
         collectionName TEXT,
+        topic TEXT,
         message TEXT
     )
     """)
     
     conn.commit()
-    conn.close()
+    if close_conn:
+        conn.close()
 
 if __name__ == "__main__":
     create_tables()

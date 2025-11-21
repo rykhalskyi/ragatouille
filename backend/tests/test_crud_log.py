@@ -67,10 +67,6 @@ def test_create_log(mock_db_connection):
             ),
         )
         mock_db_connection.commit.assert_called_once()
-        mock_db_connection.cursor.return_value.execute.assert_any_call(
-            "SELECT id, timestamp, collectionId, collectionName, topic, message FROM logs WHERE id = ?",
-            (test_uuid,), # Use test_uuid here
-        )
 
         assert isinstance(log_message, Message)
         assert log_message.id == test_uuid

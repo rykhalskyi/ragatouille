@@ -16,6 +16,7 @@ import { Body_import_file_import__collection_id__post } from '../../client/model
 import { ExtendedCollection } from '../selected-collection.component';
 import { LogStreamService } from '../../log-stream.service';
 import { LogEntry } from '../../logs-view/log-entry.interface';
+import { TaskCachingService } from '../../task-caching.service';
 
 @Component({
   selector: 'app-selected-collection-import',
@@ -50,7 +51,8 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges, OnD
   constructor(
     private fb: FormBuilder,
     private importFormStateService: ImportFormStateService,
-    private logStreamService: LogStreamService
+    private logStreamService: LogStreamService,
+    private taskCachingService: TaskCachingService
   ) {}
 
   ngOnInit(): void {
@@ -81,19 +83,19 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges, OnD
       .pipe(untilDestroyed(this))
       .subscribe((log: LogEntry) => {
         if (log.collectionId === this.collection?.id) {
-
-          if (log.topic === 'LOCK') {
-            this.showProgressBar.set(true); // Updated to use signal
-            this.importForm.disable();
-          } else if (log.topic === 'UNLOCK') {
-            this.showProgressBar.set(false); // Updated to use signal
-            this.importForm.enable();
-          } 
-          this.infoString.set(log.message);
-          
-          console.log('*** show progres', this.showProgressBar(), log); // Access signal value with ()
+          console.log('-- add to info --', log);
+          this.infoString.set(log.message);                
         }
       });
+
+    this.taskCachingService
+    .tasks$
+    .pipe(untilDestroyed(this))
+    .subscribe(tasks=>{   
+      const task = tasks.find(i=>i.collectionId === this.collection?.id);    
+      this.showProgressBar.set( task ? true : false);
+    });
+    
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -138,14 +140,15 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges, OnD
         }, { emitEvent: false });
         this.importFormStateService.clearState(collectionId);
       }
-console.log('4');
+
        //Clean selected file
       this.selectedFile = null;
       this.selectedFileName = '';
       this.fileInput.nativeElement.value = '';
       this.importForm.get('file')?.setValue('', {emitEvent: false});
-      //this.importForm.get('file')?.updateValueAndValidity();
-
+      
+      const task = this.taskCachingService.getTaskByCollectionId(this.collection.id);
+      this.showProgressBar.set( task ? true : false);
     }
   }
 

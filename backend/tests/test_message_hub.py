@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 from app.internal.message_hub import MessageHub, message_hub
 from app.schemas.mcp import Message
+from app.models.messages import MessageType
 from datetime import datetime
 import uuid
 
@@ -38,7 +39,7 @@ def test_send_message(mock_crud_log, mock_get_db_connection, clear_message_hub_q
     message_hub.send_message(
         "test-collection-id",
         "test-collection-name",
-        "LOG",
+        MessageType.LOG,
         "Test log message"
     )
 

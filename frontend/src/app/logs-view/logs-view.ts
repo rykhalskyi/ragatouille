@@ -29,6 +29,12 @@ export class LogsViewComponent implements OnInit, OnDestroy {
   constructor(private logStreamService: LogStreamService) {}
 
   ngOnInit(): void {
+
+    const inititalLogs = this.logStreamService.getInitialLogs()
+    inititalLogs.forEach(element => {
+      this._allLogs.push(element);
+    });
+
     this.logStreamService.logs$
       .pipe(untilDestroyed(this))
       .subscribe(log => {

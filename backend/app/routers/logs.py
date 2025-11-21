@@ -4,21 +4,22 @@ import asyncio
 from typing import List
 from sqlite3 import Connection
 
-from app.internal.message_hub import message_hub
-from app.dependencies import get_db
+from app.dependencies import get_db, get_message_hub
 from app.crud import crud_log
 from app.schemas.mcp import Message
+from datetime import datetime
 
 router = APIRouter()
 
 @router.get("/", response_model=List[Message])
-def read_logs(n: int = 50, db: Connection = Depends(get_db)):
+def read_logs(n: int = 10, db: Connection = Depends(get_db)):
     """
     Retrieve the latest n log entries.
     """
     return crud_log.get_latest_log_entries(db=db, n=n)
 
-async def event_generator(request: Request):
+async def event_generator(request: Request, message_hub):
+
     while True:
         # stop when client disconnects
         if await request.is_disconnected():
@@ -27,7 +28,6 @@ async def event_generator(request: Request):
         try:
             # block in a worker thread until a message is available
             message = await asyncio.to_thread(message_hub.get_message)
-
             yield f"data: {message.model_dump_json()}\n\n"
 
         except asyncio.CancelledError:
@@ -38,12 +38,11 @@ async def event_generator(request: Request):
             print("SSE error:", e)
             break
 
-        # optional heartbeat
-        await asyncio.sleep(0)
 
 @router.get("/stream")
-async def stream(request: Request):
+async def stream(request: Request, message_hub = Depends(get_message_hub)):
     return StreamingResponse(
-        event_generator(request),
+        event_generator(request, message_hub),
         media_type="text/event-stream"
     )
+
