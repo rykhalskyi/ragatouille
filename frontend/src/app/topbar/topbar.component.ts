@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -7,6 +7,7 @@ import { AddCollectionDialogComponent } from '../add-collection-dialog/add-colle
 import { MatDialog } from '@angular/material/dialog';
 import { CollectionRefreshService } from '../collection-refresh.service';
 import { McpService } from '../client';
+import { TaskCachingService } from '../task-caching.service';
 
 @Component({
   selector: 'app-topbar',
@@ -15,10 +16,16 @@ import { McpService } from '../client';
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss'
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit {
 
+    constructor(public dialog: MatDialog, 
+    private collectionRefreshService: CollectionRefreshService,
+    private taskCashedService: TaskCachingService){}
   
-  constructor(public dialog: MatDialog, private collectionRefreshService: CollectionRefreshService){}
+  ngOnInit(): void {
+    // just to initialize
+    this.taskCashedService.getTaskByCollectionId('');
+  }
 
  openAddCollectionDialog(): void {
     const dialogRef = this.dialog.open(AddCollectionDialogComponent, {

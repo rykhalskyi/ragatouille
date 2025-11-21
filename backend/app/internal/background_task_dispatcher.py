@@ -4,9 +4,10 @@ import uuid
 import time
 import asyncio
 from app.crud import crud_task
+from app.internal.message_hub import MessageHub
 
 class BackgroundTaskDispatcher:
-    def __init__(self, num_workers=4):
+    def __init__(self, message_hub: MessageHub, num_workers=4):
         self.task_id_queue = queue.Queue()
         self.waiting_tasks = {}
         self.running_tasks = {}
@@ -14,6 +15,7 @@ class BackgroundTaskDispatcher:
         self.num_workers = num_workers
         self.workers = []
         self._start_workers()
+        self.message_hub = message_hub
 
     def _start_workers(self):
         for _ in range(self.num_workers):
@@ -40,6 +42,7 @@ class BackgroundTaskDispatcher:
             if task_func:
                 try:
                     crud_task.update_task_status(task_id, "RUNNING")
+                   
                     kwargs['cancel_event'] = cancellation_event
                     if asyncio.iscoroutinefunction(task_func):
                         asyncio.run(task_func(*args, **kwargs))
@@ -54,13 +57,19 @@ class BackgroundTaskDispatcher:
                         if task_id in self.running_tasks:
                             del self.running_tasks[task_id]
                     self.task_id_queue.task_done()
+                    crud_task.delete_task(task_id)
+                    self.message_hub.send_task_message('Task deleted')
 
     def add_task(self, collection_id: str, task_name: str, task_func, *args, **kwargs):
         task_id = str(uuid.uuid4())
         start_time = int(time.time())
         crud_task.create_task(task_id, collection_id, task_name, start_time, "NEW")
+        self.message_hub.send_task_message('Task created')
+        
+
         with self.lock:
-            self.waiting_tasks[task_id] = (task_func, args, kwargs)
+            new_args = (collection_id,) + args
+            self.waiting_tasks[task_id] = (task_func, new_args, kwargs)
         self.task_id_queue.put(task_id)
         return task_id
 

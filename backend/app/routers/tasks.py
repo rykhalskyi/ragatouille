@@ -1,6 +1,9 @@
+from typing import List
 from fastapi import APIRouter, Depends
 from app.internal.background_task_dispatcher import BackgroundTaskDispatcher
 from app.dependencies import get_task_dispatcher
+from app.crud import crud_task
+from app.schemas import task as task_schema
 
 router = APIRouter()
 
@@ -8,3 +11,7 @@ router = APIRouter()
 def delete_task(task_id: str, task_dispatcher: BackgroundTaskDispatcher = Depends(get_task_dispatcher)):
     task_dispatcher.cancel_task(task_id)
     return {"message": f"Task {task_id} cancelled"}
+
+@router.get("/tasks", response_model=List[task_schema.Task])
+def get_tasks():
+    return crud_task.get_all_tasks()

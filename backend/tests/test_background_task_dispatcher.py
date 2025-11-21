@@ -5,7 +5,7 @@ import threading
 from app.internal.background_task_dispatcher import BackgroundTaskDispatcher
 
 # A dummy task that can be cancelled
-def cancellable_dummy_task(duration, cancel_event: threading.Event, *args, **kwargs):
+def cancellable_dummy_task(collection_id: str, duration, cancel_event: threading.Event):
     start_time = time.time()
     while (time.time() - start_time) < duration:
         if cancel_event.is_set():
@@ -17,12 +17,13 @@ def cancellable_dummy_task(duration, cancel_event: threading.Event, *args, **kwa
 class TestBackgroundTaskDispatcher(unittest.TestCase):
     def test_enqueue_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task"
             
-            task_id = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 0.1, cancel_event=threading.Event())
+            task_id = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 0.1)
             
             self.assertIsNotNone(task_id)
             mock_crud_task.create_task.assert_called_once()
@@ -37,16 +38,17 @@ class TestBackgroundTaskDispatcher(unittest.TestCase):
 
     def test_cancel_queued_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task_queued"
             
             # Enqueue a long-running task first to ensure the next one stays in queue
-            long_task_id = dispatcher.add_task(collection_id, "long_task", cancellable_dummy_task, 10, cancel_event=threading.Event())
+            long_task_id = dispatcher.add_task(collection_id, "long_task", cancellable_dummy_task, 10)
             
             # Enqueue the task to be cancelled
-            task_id_to_cancel = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 0.1, cancel_event=threading.Event())
+            task_id_to_cancel = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 0.1)
             
             # Immediately cancel the second task
             self.assertTrue(dispatcher.cancel_task(task_id_to_cancel))
@@ -64,13 +66,14 @@ class TestBackgroundTaskDispatcher(unittest.TestCase):
 
     def test_cancel_running_task(self):
         with patch('app.internal.background_task_dispatcher.crud_task') as mock_crud_task:
-            dispatcher = BackgroundTaskDispatcher(num_workers=1)
+            mock_message_hub = MagicMock()
+            dispatcher = BackgroundTaskDispatcher(mock_message_hub, num_workers=1)
             
             collection_id = "test_collection"
             task_name = "test_task_running"
             
             # Enqueue a task that runs for a while
-            task_id = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 1, cancel_event=threading.Event())
+            task_id = dispatcher.add_task(collection_id, task_name, cancellable_dummy_task, 1)
             
             # Wait for the task to start running
             time.sleep(0.1) 

@@ -13,15 +13,29 @@ import { CollectionRefreshService } from '../collection-refresh.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog/delete-confirmation-dialog.component';
 import { SelectedCollectionImportComponent } from './selected-collection-import/selected-collection-import.component';
+import { LogsViewComponent } from '../logs-view/logs-view';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+
 
 export interface ExtendedCollection extends Collection {
   saved: boolean;
 }
-
+@UntilDestroy()
 @Component({
   selector: 'app-selected-collection',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatIconModule, MatDialogModule, SelectedCollectionImportComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSlideToggleModule,
+    MatIconModule,
+    MatDialogModule,
+    SelectedCollectionImportComponent,
+    LogsViewComponent // Add LogsViewComponent here
+  ],
   templateUrl: './selected-collection.component.html',
   styleUrl: './selected-collection.component.scss'
 })
@@ -40,7 +54,8 @@ export class SelectedCollectionComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(untilDestroyed(this))
+    .subscribe(params => {
       const collectionId = params.get('collectionId');
       if (collectionId) {
         this.fetchCollectionDetails(collectionId);

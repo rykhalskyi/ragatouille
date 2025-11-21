@@ -2,25 +2,26 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Task } from '../models/Task';
+import type { Message } from '../models/Message';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class TasksService {
+export class LogsService {
     /**
-     * Delete Task
-     * @param taskId
-     * @returns any Successful Response
+     * Read Logs
+     * Retrieve the latest n log entries.
+     * @param n
+     * @returns Message Successful Response
      * @throws ApiError
      */
-    public static deleteTaskTasksTasksTaskIdDelete(
-        taskId: string,
-    ): CancelablePromise<any> {
+    public static readLogsLogsGet(
+        n: number = 10,
+    ): CancelablePromise<Array<Message>> {
         return __request(OpenAPI, {
-            method: 'DELETE',
-            url: '/tasks/tasks/{task_id}',
-            path: {
-                'task_id': taskId,
+            method: 'GET',
+            url: '/logs/',
+            query: {
+                'n': n,
             },
             errors: {
                 422: `Validation Error`,
@@ -28,14 +29,14 @@ export class TasksService {
         });
     }
     /**
-     * Get Tasks
-     * @returns Task Successful Response
+     * Stream
+     * @returns any Successful Response
      * @throws ApiError
      */
-    public static getTasksTasksTasksGet(): CancelablePromise<Array<Task>> {
+    public static streamLogsStreamGet(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/tasks/tasks',
+            url: '/logs/stream',
         });
     }
 }

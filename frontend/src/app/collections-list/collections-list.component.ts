@@ -23,7 +23,8 @@ export class CollectionsListComponent implements OnInit, OnDestroy {
   collections: Collection[] = [];
   private refreshSubscription: Subscription;
 
-  constructor(private router: Router, private collectionRefreshService: CollectionRefreshService) {
+  constructor(private router: Router, 
+    private collectionRefreshService: CollectionRefreshService,) {
     this.refreshSubscription = this.collectionRefreshService.refreshNeeded$
     .pipe(untilDestroyed(this))
     .subscribe(() => {
