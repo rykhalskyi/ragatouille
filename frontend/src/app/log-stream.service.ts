@@ -1,42 +1,42 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { LogEntry } from './logs-view/log-entry.interface';
 import { environment } from '../environments/environment';
 import { LogsService } from './client/services/LogsService'; // Import the generated LogsService
+import { Message } from './client/models/Message';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LogStreamService {
-  private logSubject: Subject<LogEntry> = new Subject<LogEntry>();
-  public logs$: Observable<LogEntry> = this.logSubject.asObservable();
+  private logSubject: Subject<Message> = new Subject<Message>();
   private eventSource: EventSource | undefined;
   private readonly SSE_URL = `${environment.apiUrl}/logs/stream`;
 
-  private initialLogs: LogEntry[] =[]
+  private infos: StringDictionary = {};
+
+  public logs$: Observable<Message> = this.logSubject.asObservable();
 
   constructor(private ngZone: NgZone) { // Inject LogsService
+    console.log('Service constructor');
     this.connect();
   }
 
   private connect(): void {
     if (typeof EventSource !== 'undefined') {
-      // Fetch initial logs
-      LogsService.readLogsLogsGet(25)      
-        .then(initialLogs => {
-          const logs: LogEntry[] = [];
-          initialLogs.forEach(log => logs.push(log as LogEntry));
-          this.initialLogs = logs;
-        })
-        .catch(error => console.error('Error fetching initial logs:', error));
-
+      
       this.eventSource = new EventSource(this.SSE_URL);
 
       this.eventSource.onmessage = (event) => {
         this.ngZone.run(() => {
           const data = JSON.parse(event.data);
-          console.log('----- message from source ----', data)
-          this.logSubject.next(data as LogEntry);
+          const logEntry = data as Message;
+
+          if (logEntry.topic==='INFO' && logEntry.collectionId)
+          {
+            this.infos[logEntry.collectionId] = logEntry.message;
+          }
+
+          this.logSubject.next(logEntry);
         });
       };
 
@@ -49,9 +49,14 @@ export class LogStreamService {
       this.eventSource.onopen = () => {
         console.log('SSE connection opened.');
       };
+
+        // Fetch initial logs
+      
     } else {
       console.warn('EventSource is not supported in this browser.');
     }
+
+    
   }
 
   closeConnection(): void {
@@ -59,8 +64,25 @@ export class LogStreamService {
     console.log('SSE connection closed.');
   }
 
-  getInitialLogs(): LogEntry[] {
-    return this.initialLogs
+  getInfo(collectionId: string){
+    return this.infos[collectionId];
   }
 
+  async loadInitialLogs(): Promise<Message[]>{
+    try{
+      const logs = await LogsService.readLogsLogsGet(25);      
+      return logs;
+    }
+    catch (e) {
+      console.error('FAIL load logs',e);
+      return [];
+    }
+    
+  }
+
+}
+
+
+interface StringDictionary {
+  [key: string]: string;
 }

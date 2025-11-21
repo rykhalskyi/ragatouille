@@ -15,8 +15,8 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Body_import_file_import__collection_id__post } from '../../client/models/Body_import_file_import__collection_id__post';
 import { ExtendedCollection } from '../selected-collection.component';
 import { LogStreamService } from '../../log-stream.service';
-import { LogEntry } from '../../logs-view/log-entry.interface';
 import { TaskCachingService } from '../../task-caching.service';
+import { Message } from '../../client/models/Message';
 
 @Component({
   selector: 'app-selected-collection-import',
@@ -81,7 +81,7 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges, OnD
 
     this.logStreamService.logs$
       .pipe(untilDestroyed(this))
-      .subscribe((log: LogEntry) => {
+      .subscribe((log: Message) => {
         if (log.collectionId === this.collection?.id) {
           console.log('-- add to info --', log);
           this.infoString.set(log.message);                
@@ -145,10 +145,14 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges, OnD
       this.selectedFile = null;
       this.selectedFileName = '';
       this.fileInput.nativeElement.value = '';
-      this.importForm.get('file')?.setValue('', {emitEvent: false});
+      this.importForm.get('file')?.setValue(null, {emitEvent: false});
       
       const task = this.taskCachingService.getTaskByCollectionId(this.collection.id);
       this.showProgressBar.set( task ? true : false);
+
+      const info = this.logStreamService.getInfo(collectionId);
+      if (info)
+        this.infoString.set(info);
     }
   }
 
