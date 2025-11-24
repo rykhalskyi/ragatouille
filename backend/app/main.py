@@ -40,9 +40,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Read allowed origins from environment variable, or use default for local development
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://127.0.0.1:4200")
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(',')]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],

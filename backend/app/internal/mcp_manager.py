@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 import threading
 import time
 import chromadb
+import os
 from app.database import get_db_connection
 from app.crud.crud_collection import get_enabled_collections_for_mcp
 
@@ -26,7 +27,9 @@ class MCPManager:
     def _run_server(self):
         if self._mcp_server:
             # FastMCP.run() is a blocking call, so it needs to be in a separate thread
-            self._mcp_server.run(transport="sse", host="127.0.0.1", port=8001, path="/mcp")
+            host = os.getenv("MCP_HOST", "127.0.0.1")
+            port = int(os.getenv("MCP_PORT", 8001))
+            self._mcp_server.run(transport="sse", host=host, port=port, path="/mcp")
 
     def enable(self):
         if not self._is_enabled:
