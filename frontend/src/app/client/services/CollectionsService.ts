@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { Collection } from '../models/Collection';
 import type { CollectionCreate } from '../models/CollectionCreate';
+import type { CollectionDetails } from '../models/CollectionDetails';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -94,6 +95,26 @@ export class CollectionsService {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/collections/{collection_id}',
+            path: {
+                'collection_id': collectionId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Read Collection Details
+     * @param collectionId
+     * @returns CollectionDetails Successful Response
+     * @throws ApiError
+     */
+    public static readCollectionDetailsCollectionsCollectionIdDetailsGet(
+        collectionId: string,
+    ): CancelablePromise<CollectionDetails> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/collections/{collection_id}/details',
             path: {
                 'collection_id': collectionId,
             },

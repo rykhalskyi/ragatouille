@@ -5,4 +5,5 @@
 export enum ImportType {
     NONE = 'NONE',
     FILE = 'FILE',
+    URL = 'URL',
 }

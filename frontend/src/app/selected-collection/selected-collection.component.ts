@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CollectionsService } from '../client/services/CollectionsService';
 import { Collection } from '../client/models/Collection';
+import { CollectionDetails } from '../client/models/CollectionDetails';
 import { MatIconModule } from '@angular/material/icon';
 import { CollectionRefreshService } from '../collection-refresh.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -15,7 +16,9 @@ import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog
 import { SelectedCollectionImportComponent } from './selected-collection-import/selected-collection-import.component';
 import { LogsViewComponent } from '../logs-view/logs-view';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-
+import { CollectionDetailsComponent } from './collection-details/collection-details.component';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface ExtendedCollection extends Collection {
   saved: boolean;
@@ -34,7 +37,8 @@ export interface ExtendedCollection extends Collection {
     MatIconModule,
     MatDialogModule,
     SelectedCollectionImportComponent,
-    LogsViewComponent // Add LogsViewComponent here
+    LogsViewComponent,
+    CollectionDetailsComponent
   ],
   templateUrl: './selected-collection.component.html',
   styleUrl: './selected-collection.component.scss'
@@ -42,6 +46,7 @@ export interface ExtendedCollection extends Collection {
 
 export class SelectedCollectionComponent implements OnInit {
   collection: ExtendedCollection | undefined;
+  collectionDetails = signal<CollectionDetails | null>(null);
   isEnabled: boolean = false;
   isEditingDescription = false;
   editedDescription = '';
@@ -58,12 +63,14 @@ export class SelectedCollectionComponent implements OnInit {
     .subscribe(params => {
       const collectionId = params.get('collectionId');
       if (collectionId) {
-        this.fetchCollectionDetails(collectionId);
+        this.fetchCollection(collectionId);
+        CollectionsService.readCollectionDetailsCollectionsCollectionIdDetailsGet(collectionId)
+        .then(res => this.collectionDetails.set(res));
       }
     });
   }
 
-  async fetchCollectionDetails(collectionId: string): Promise<void> {
+  async fetchCollection(collectionId: string): Promise<void> {
     try {
       const collection = await CollectionsService.readCollectionCollectionsCollectionIdGet(collectionId);
 

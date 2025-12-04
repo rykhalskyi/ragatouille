@@ -64,7 +64,7 @@ Use the exact structure from `.design-specs/templates/requirements-template.md`
 - **Use exact structure**: Follow all sections and formatting from the template
 - **Include Mermaid diagrams**: Add visual representations as shown in template
 
-4. Show to user changes you going to apply and ask if they are ok. After confirmation apply changes
+4. Show to user changes you going to apply and ask if they are ok. Ask about confirmation. After confirmation apply changes
  - Create a file design-{{args}}.md in folder .design-specs/specs/ , save created design to it
 
 """

@@ -11,6 +11,7 @@ export type { Body_import_file_import__collection_id__post } from './models/Body
 export type { Body_import_url_import_url__colletion_id__post } from './models/Body_import_url_import_url__colletion_id__post';
 export type { Collection } from './models/Collection';
 export type { CollectionCreate } from './models/CollectionCreate';
+export type { CollectionDetails } from './models/CollectionDetails';
 export type { FileImportSettings } from './models/FileImportSettings';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { Import } from './models/Import';
