@@ -2,7 +2,8 @@ from threading import Event
 import time
 
 import chromadb
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
+import numpy as np
 from app.internal import simple_crawler
 from app.internal.message_hub import MessageHub
 from app.models.imports import ImportBase
@@ -49,8 +50,8 @@ class UrlImport(ImportBase):
 
             message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
 
-            model = SentenceTransformer(import_params.model, trust_remote_code=True)
-            embeddings = model.encode(chunks)
+            embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+            embeddings = np.array(list(embedder.embed(chunks)))
             message_hub.send_message(collection_id, MessageType.INFO, "Embeddings created. Saving to Database....")
 
             client = chromadb.PersistentClient(path="./chroma_data")
