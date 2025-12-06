@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from threading import Event
 from typing import List
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 import chromadb
 import time
+import numpy as np
 from app.internal.message_hub import MessageHub
 from app.models.messages import MessageType
 from app.schemas.imports import Import
@@ -31,7 +32,7 @@ class FileImport(ImportBase):
             model="all-MiniLM-L6-v2",
             settings=FileImportSettings(
                 chunk_size=800,
-                chunk_overlap=10,
+                chunk_overlap=80,
                 no_chunks=False
             )
         )
@@ -50,8 +51,10 @@ class FileImport(ImportBase):
 
             message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
 
-            model = SentenceTransformer(import_params.model, trust_remote_code=True)
-            embeddings = model.encode(chunks)
+            #new embedder
+            embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+            embeddings = np.array(list(embedder.embed(chunks)))
+
             message_hub.send_message(collection_id, MessageType.INFO, "Embeddings created. Saving to Database....")
 
             client = chromadb.PersistentClient(path="./chroma_data")

@@ -2,7 +2,7 @@ import os
 import threading
 from fastapi import FastAPI
 from app.dependencies import get_message_hub, get_message_hub_instance
-from app.routers import items, poc, collections, tasks, imports, mcp, logs
+from app.routers import items, collections, tasks, imports, mcp, logs
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables, get_db_connection
 from contextlib import asynccontextmanager
@@ -52,7 +52,6 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
 )
 
-app.include_router(poc.router)
 app.include_router(items.router)
 app.include_router(collections.router, prefix="/collections", tags=["collections"])
 app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
