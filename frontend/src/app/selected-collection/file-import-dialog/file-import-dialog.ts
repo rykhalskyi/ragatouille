@@ -33,6 +33,7 @@ export class FileImportDialog implements OnInit {
   selectedFile: File | null = null;
   showProgressBar = signal(false);
   infoString = signal<string>("");
+  fileAcceptFilter: string = '.md, .txt, .docx, .pdf';
 
   constructor(
     public dialogRef: MatDialogRef<FileImportDialog>,
