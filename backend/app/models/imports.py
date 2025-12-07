@@ -5,9 +5,16 @@ from fastembed import TextEmbedding
 import chromadb
 import time
 import numpy as np
+from pathlib import Path
+
 from app.internal.message_hub import MessageHub
 from app.models.messages import MessageType
 from app.schemas.imports import Import
+from app.internal.temp_file_helper import TempFileHelper
+
+# Import LangChain loaders
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import PDFPlumberLoader
 
 class ImportBase(ABC):
     name: str
@@ -20,6 +27,42 @@ class ImportBase(ABC):
     def create_chunks(self, text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
         return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size - chunk_overlap)]
 
+    async def prepare_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, message_hub: MessageHub) -> str:
+        """
+        Prepares file content for chunking.
+        Handles different file types (TXT, MD, DOCX, PDF).
+        """
+        file_extension = Path(file_name).suffix.lower()
+        extracted_text = ""
+        temp_file_path = None
+
+        try:
+            if file_extension in [".docx", ".pdf"]:
+                temp_file_path = TempFileHelper.save_temp(file_content_bytes, file_name)
+
+                try:
+                    if file_extension == ".docx":
+                        loader = Docx2txtLoader(temp_file_path)
+                        message_hub.send_message(collection_id, MessageType.INFO, f"Parsing DOCX file '{file_name}' with Docx2txtLoader.")
+                    elif file_extension == ".pdf":
+                        loader = PDFPlumberLoader(temp_file_path)
+                        message_hub.send_message(collection_id, MessageType.INFO, f"Parsing PDF file '{file_name}' with PDFPlumberLoader.")
+                    
+                    docs = loader.load()
+                    extracted_text = "\n".join([doc.page_content for doc in docs])
+                except Exception as e:
+                    message_hub.send_message(collection_id, MessageType.INFO, f"Error parsing {file_extension.upper()} file '{file_name}': {e}")
+                    raise RuntimeError(f"Failed to parse {file_extension.upper()} file '{file_name}': {e}") from e
+            elif file_extension in [".txt", ".md"]:
+                extracted_text = file_content_bytes.decode("utf-8")
+            else:
+                raise ValueError(f"Unsupported file type: {file_extension}")
+        finally:
+            if temp_file_path:
+                TempFileHelper.remove_temp(temp_file_path)
+        
+        return extracted_text
+        
 from app.schemas.imports import Import, FileImportSettings
 
 class FileImport(ImportBase):
@@ -38,10 +81,11 @@ class FileImport(ImportBase):
         )
 
     async def import_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, import_params: Import, message_hub:MessageHub, cancel_event: Event) -> None: # Modified signature
+        file_extension = Path(file_name).suffix.lower()
         try:
             message_hub.send_message(collection_id,  MessageType.LOCK, f"Starting import of {file_name}")
                           
-            text_content = file_content_bytes.decode("utf-8")
+            text_content = await self.prepare_data(collection_id, file_name, file_content_bytes, message_hub)
 
             chunks = []
             if not import_params.settings.no_chunks:
@@ -87,11 +131,11 @@ class FileImport(ImportBase):
                 batch_num += 1
                 
             message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} completed successfully")
-            message_hub.send_message(collection_id, MessageType.LOG, f"SUCCESSFUL imported from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
+            message_hub.send_message(collection_id, MessageType.LOG, f"SUCCESSFUL imported {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
         except Exception as e:
             print("FAIL import_data", e)
             message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} failed: {e}")
-            message_hub.send_message(collection_id, MessageType.LOG, f"FAILED import from {file_name}. Chunk size {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}. Exception {e}")
+            message_hub.send_message(collection_id, MessageType.LOG, f"FAILED import {file_extension.upper()} from {file_name}. Chunk size {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}. Exception {e}")
             
 
             

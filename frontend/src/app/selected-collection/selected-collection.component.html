@@ -37,14 +37,12 @@
     </button>
   </div>
   
-  <!--
   <div class="full-row margin-16">
-    <app-collection-details [collectionDetails]="collectionDetails()"></app-collection-details>
-  </div>-->
-
-  <div class="full-row margin-16">
-    <app-selected-collection-import [collection]="collection" data-testid="collection-import"></app-selected-collection-import>
-     <app-collection-details [collectionDetails]="collectionDetails()"></app-collection-details>
+    <app-selected-collection-import 
+      [collection]="collection"
+      [collectionDetails]="collectionDetails"
+      data-testid="collection-import"
+      class="selected-collection"></app-selected-collection-import>
   </div>
   
   <div class="full-row-2 margin-16">
