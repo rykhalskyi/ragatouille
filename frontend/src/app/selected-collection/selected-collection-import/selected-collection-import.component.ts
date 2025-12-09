@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'; // Import MatSelectChange
@@ -19,6 +19,8 @@ import { FileImportDialog } from '../file-import-dialog/file-import-dialog';
 import { Body_import_file_import__collection_id__post } from '../../client/models/Body_import_file_import__collection_id__post';
 import { UrlImportDialog } from '../url-import-dialog/url-import-dialog';
 import { Body_import_url_import_url__colletion_id__post } from '../../client/models/Body_import_url_import_url__colletion_id__post';
+import { CollectionDetailsComponent } from '../collection-details/collection-details.component';
+import { CollectionDetails } from '../../client';
 
 @Component({
   selector: 'app-selected-collection-import',
@@ -30,7 +32,8 @@ import { Body_import_url_import_url__colletion_id__post } from '../../client/mod
     MatInputModule,
     MatButtonModule,
     ReactiveFormsModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    CollectionDetailsComponent
   ],
   templateUrl: './selected-collection-import.component.html',
   styleUrl: './selected-collection-import.component.scss',
@@ -40,11 +43,13 @@ import { Body_import_url_import_url__colletion_id__post } from '../../client/mod
 @UntilDestroy()
 export class SelectedCollectionImportComponent implements OnInit, OnChanges{
   @Input() collection: ExtendedCollection | undefined;
+  @Input() collectionDetails: WritableSignal<CollectionDetails | null> = signal(null);
 
   importForm!: FormGroup;
   importTypes: Import[] = [];
   showProgressBar = signal(false);
   infoString = signal<string>("");
+  
 
   constructor(
     private fb: FormBuilder,
@@ -126,7 +131,7 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges{
       this.importForm.markAsPristine();
       this.importForm.markAsUntouched();
       this.importForm.updateValueAndValidity({ emitEvent: false });
-
+  
     }
   }
 

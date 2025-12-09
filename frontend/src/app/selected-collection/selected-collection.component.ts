@@ -16,9 +16,7 @@ import { DeleteConfirmationDialogComponent } from '../delete-confirmation-dialog
 import { SelectedCollectionImportComponent } from './selected-collection-import/selected-collection-import.component';
 import { LogsViewComponent } from '../logs-view/logs-view';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CollectionDetailsComponent } from './collection-details/collection-details.component';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+
 
 export interface ExtendedCollection extends Collection {
   saved: boolean;
@@ -37,8 +35,7 @@ export interface ExtendedCollection extends Collection {
     MatIconModule,
     MatDialogModule,
     SelectedCollectionImportComponent,
-    LogsViewComponent,
-    CollectionDetailsComponent
+    LogsViewComponent
   ],
   templateUrl: './selected-collection.component.html',
   styleUrl: './selected-collection.component.scss'
