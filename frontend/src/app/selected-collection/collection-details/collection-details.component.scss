@@ -6,3 +6,9 @@
 .metadata-item {
   margin-left: 20px;
 }
+
+.details {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
