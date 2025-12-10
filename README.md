@@ -30,7 +30,7 @@ To get started with RAGatouille, you will need Docker or Podman installed on you
 2. **Build the Docker images and run the containers:**
    This command will build the Docker images for both the backend and frontend services based on their respective `Dockerfile`s.
 
-    `bash docker compose up -d --build `
+    `docker compose up -d --build `
 
 * The FastAPI backend will be accessible externally on `http://localhost:4301`.
 * The Angular frontend will be accessible externally on `http://localhost:4300`.
