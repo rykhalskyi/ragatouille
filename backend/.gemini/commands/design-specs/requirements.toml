@@ -3,6 +3,9 @@ prompt = """
 Create a file requiements-{{args}}.md in folder .design-specs/specs/ int the root directory of this
 project. the folder have already existed. **No code implementation in this command.**
 
+Result of copmmand is 2 files: '.design-specs/specs/requirements-{{args}}.md' and '.design-specs/templates/design-template.md'
+**Important: DO NOT IMPLEMENT CODE IN THIS COMMAND!!**
+
 Follow this steps:
 
 PHASE 1: Requirements Creation
