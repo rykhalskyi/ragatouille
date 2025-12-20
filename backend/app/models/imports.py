@@ -8,6 +8,7 @@ import numpy as np
 from pathlib import Path
 
 from app.internal.message_hub import MessageHub
+from app.models.import_context import ImportContext
 from app.models.messages import MessageType
 from app.schemas.imports import Import
 from app.internal.temp_file_helper import TempFileHelper
@@ -21,8 +22,9 @@ class ImportBase(ABC):
     name: str
     settings: Import
 
+    
     @abstractmethod
-    async def import_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, import_params: Import, message_hub:MessageHub, cancel_event:Event) -> None: # Modified signature
+    async def import_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, context: ImportContext, cancel_event:Event) -> None: # Modified signature
         pass
 
     @abstractmethod
@@ -91,16 +93,19 @@ class FileImport(ImportBase):
         
         return extracted_text
 
-    async def import_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, import_params: Import, message_hub:MessageHub, cancel_event: Event) -> None: # Modified signature
+    async def import_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, context: ImportContext, cancel_event: Event) -> None: # Modified signature
         file_extension = Path(file_name).suffix.lower()
+        message_hub = context.messageHub
+        import_params = context.parameters
         try:
+            
             message_hub.send_message(collection_id,  MessageType.LOCK, f"Starting import of {file_name}")
                           
             text_content = await self.prepare_data(collection_id, file_name, file_content_bytes, message_hub)
             
             if cancel_event.is_set():
                  message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
-                 message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
+                 message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import {file_extension.upper()} from {file_name} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
                  return
 
             chunks = []
@@ -163,6 +168,12 @@ class FileImport(ImportBase):
             message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} failed: {e}")
             message_hub.send_message(collection_id, MessageType.LOG, f"FAILED import {file_extension.upper()} from {file_name}. Chunk size {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}. Exception {e}")
             
+    
+    async def step_1(self, collection_id: str, file_name: str, file_content_bytes: bytes, import_params: Import, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+        pass
 
+    
+    async def step_2(self, collection_id: str, import_params: Import, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+        pass
             
         
