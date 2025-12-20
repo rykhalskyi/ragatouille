@@ -7,6 +7,7 @@ import time
 import numpy as np
 from pathlib import Path
 
+from app.crud.crud_files import create_file
 from app.internal.message_hub import MessageHub
 from app.models.import_context import ImportContext
 from app.models.messages import MessageType
@@ -173,8 +174,13 @@ class FileImport(ImportBase):
     
     async def step_1(self, collection_id: str, file_name: str, file_content_bytes: bytes, context: ImportContext, cancel_event:Event) -> None: # Modified signature
         if context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == None or context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == 'false':
+            context.messageHub.send_message(collection_id, MessageType.INFO, "Set 2 Step mode to use this function")
             return
-        pass
+        
+        text_content = await self.prepare_data(collection_id, file_name, file_content_bytes, context.messageHub)
+
+        tmp_file = TempFileHelper.save_temp_str(text_content, file_name)
+        create_file(context.db, collection_id, tmp_file, file_name)
 
     
     async def step_2(self, collection_id: str, context: ImportContext, cancel_event:Event) -> None: # Modified signature

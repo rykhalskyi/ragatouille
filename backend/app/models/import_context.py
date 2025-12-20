@@ -14,7 +14,7 @@ class ImportContext:
     parameters: Import
 
     def __init__(self, dbConnection: Connection, messageHub: MessageHub, parameters: Import):
-        self.dbCOnnectin = dbConnection
+        self.db = dbConnection
         self.messageHub = messageHub
         self.settings = SettingsManager(dbConnection)
         self.parameters = parameters

@@ -44,6 +44,29 @@ class TempFileHelper:
             raise
 
     @staticmethod
+    def save_temp_str(file_content: str, original_file_name: str) -> str:
+        try:
+            # Extract file extension from original_file_name
+            suffix = Path(original_file_name).suffix
+            
+            # Create a temporary file with the original extension
+            # delete=False prevents the file from being deleted when closed
+            # Open the NamedTemporaryFile in text mode so we can write str directly
+            # Specify encoding to ensure consistent behavior across platforms
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode='w', encoding='utf-8') as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
+            
+            logger.info(f"Temporary file saved to: {temp_file_path}")
+            return temp_file_path
+        except IOError as e:
+            logger.error(f"Failed to save temporary file {original_file_name}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"An unexpected error occurred while saving temporary file {original_file_name}: {e}")
+            raise
+
+    @staticmethod
     def remove_temp(file_path: str) -> None:
         """
         Removes a temporary file from the filesystem.
