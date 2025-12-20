@@ -16,6 +16,8 @@ from app.internal.temp_file_helper import TempFileHelper
 # Import LangChain loaders
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import PyPDFLoader
+
+from app.schemas.setting import SettingsName
 #from langchain_community.document_loaders import PyMuPDFLoader
 
 class ImportBase(ABC):
@@ -169,11 +171,15 @@ class FileImport(ImportBase):
             message_hub.send_message(collection_id, MessageType.LOG, f"FAILED import {file_extension.upper()} from {file_name}. Chunk size {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}. Exception {e}")
             
     
-    async def step_1(self, collection_id: str, file_name: str, file_content_bytes: bytes, import_params: Import, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+    async def step_1(self, collection_id: str, file_name: str, file_content_bytes: bytes, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+        if context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == None or context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == 'false':
+            return
         pass
 
     
-    async def step_2(self, collection_id: str, import_params: Import, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+    async def step_2(self, collection_id: str, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+        if context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == None or context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == 'false':
+             return
         pass
             
         

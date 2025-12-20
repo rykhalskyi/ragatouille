@@ -28,7 +28,7 @@ async def import_file(collection_id: str, import_params: str = Form(...), file: 
         task_name = f"Importing {file.filename} to {collection_id}"
         import_params_model = Import.model_validate_json(import_params)
 
-        import_context = ImportContext(db, message_hub, get_settings(db), import_params_model)
+        import_context = ImportContext(db, message_hub, import_params_model)
         
         collection = crud_collection.get_collection(db, collection_id)
         if (collection == None):
@@ -60,7 +60,7 @@ async def import_url(collection_id: str,  url: str, import_params: str = Form(..
      
         import_params_model = Import.model_validate_json(import_params)
         
-        import_context = ImportContext(db, message_hub, get_settings(db), import_params_model)
+        import_context = ImportContext(db, message_hub, import_params_model)
         
         collection = crud_collection.get_collection(db, collection_id)
         if (collection == None):
