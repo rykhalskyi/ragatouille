@@ -16,14 +16,22 @@ def create_file(db: Connection, collection_id: str, path: str, source: str):
     db.commit()
 
 def get_files_for_collection(db: Connection, collection_id: str) -> List[File]:
-    cursor = db.execute("SELECT id, timestamp, collection_id, path, source FROM files WHERE colection_id=?", str(collection_id))
+    cursor = db.execute("SELECT id, timestamp, collection_id, path, source FROM files WHERE colection_id=?", collection_id)
     db.row_factory = sqlite3.Row
     files_rows = cursor.fetchall()
     return [File(**row) for row in files_rows]
 
 def delete_files_by_collection_id(db: Connection, collection_id: str):
     cursor = db.cursor()
-    cursor.execute("DELETE FROM files WHERE collectionId = ?", (collection_id,))
+    cursor.execute("DELETE FROM files WHERE collectionId = ?", (collection_id))
+    db.commit()
+    if cursor.rowcount == 0:
+        return None
+    return {"message": "Files deleted successfully"}
+
+def delete_file(db: Connection, id:str):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM files WHERE id = ?", (id))
     db.commit()
     if cursor.rowcount == 0:
         return None

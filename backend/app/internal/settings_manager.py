@@ -27,3 +27,8 @@ class SettingsManager:
         setting_create = SettingCreate(name=name.value, value=value)
         crud_setting.update_settings(self.db, [setting_create])
         self._cache[name] = value
+
+    def check(self, name: SettingsName, value: str) -> bool:
+        return self.get_setting(name) == value 
+            
+            

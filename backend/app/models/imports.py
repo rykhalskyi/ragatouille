@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import os
 from threading import Event
 from typing import List
 from fastembed import TextEmbedding
@@ -7,7 +8,7 @@ import time
 import numpy as np
 from pathlib import Path
 
-from app.crud.crud_files import create_file
+from app.crud.crud_files import create_file, delete_file, get_files_for_collection
 from app.internal.message_hub import MessageHub
 from app.models.import_context import ImportContext
 from app.models.messages import MessageType
@@ -36,8 +37,13 @@ class ImportBase(ABC):
 
     def create_chunks(self, text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
         return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size - chunk_overlap)]
-
-
+    
+    def check_cancelled(self, collection_id: str, file_name: str, message_hub: MessageHub, cancel_event: Event) -> bool:
+        if cancel_event.is_set():
+            message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
+            message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import from {file_name} ")
+            return True
+        return False    
         
 from app.schemas.imports import Import, FileImportSettings
 
@@ -55,6 +61,54 @@ class FileImport(ImportBase):
                 no_chunks=False
             )
         )
+    
+    def _process_chunks_and_store(self, collection_id: str, file_name: str, file_extension: str, chunks: List[str], import_params: Import, message_hub: MessageHub, cancel_event: Event) -> None:
+        """Embed chunks and store them in ChromaDB with batching and cancellation support."""
+        message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
+
+        embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+        embeddings = np.array(list(embedder.embed(chunks)))
+
+        if self.check_cancelled(collection_id, file_name, message_hub, cancel_event):
+            return
+
+        message_hub.send_message(collection_id, MessageType.INFO, "Embeddings created. Saving to Database....")
+
+        client = chromadb.PersistentClient(path="./chroma_data")
+        collection = client.get_or_create_collection(name=collection_id, metadata={"hnsw:space": "cosine"} )
+
+        ts = int(time.time())
+        # ---- batching logic ----
+        max_batch_size = 5000  # safe limit below Chroma's 5461 cap
+
+        batch_num = 1
+        for start in range(0, len(chunks), max_batch_size):
+
+            if self.check_cancelled(collection_id, file_name, message_hub, cancel_event):
+                return
+
+            end = start + max_batch_size
+
+            batch_chunks = chunks[start:end]
+            batch_embeddings = embeddings[start:end].tolist()
+
+            batch_ids = [
+                f"{file_name}_{ts}_{i}"
+                for i in range(start, min(end, len(chunks)))
+            ]
+
+            collection.upsert(
+                documents=batch_chunks,
+                embeddings=batch_embeddings,
+                metadatas=[{"source": file_name, "chunk": i, "ts":ts} for i in range(start, min(end, len(chunks)))],
+                ids=batch_ids
+            )
+
+            message_hub.send_message(collection_id, MessageType.INFO, f"Import of batch {batch_num} completed successfully")
+            batch_num += 1
+            
+        message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} completed successfully")
+        message_hub.send_message(collection_id, MessageType.LOG, f"SUCCESSFUL imported {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
     
     async def prepare_data(self, collection_id: str, file_name: str, file_content_bytes: bytes, message_hub: MessageHub) -> str:
         """
@@ -106,10 +160,8 @@ class FileImport(ImportBase):
                           
             text_content = await self.prepare_data(collection_id, file_name, file_content_bytes, message_hub)
             
-            if cancel_event.is_set():
-                 message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
-                 message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import {file_extension.upper()} from {file_name} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
-                 return
+            if self.check_cancelled(collection_id, file_name, message_hub, cancel_event):
+                return
 
             chunks = []
             if not import_params.settings.no_chunks:
@@ -117,55 +169,8 @@ class FileImport(ImportBase):
             else:
                 chunks = [text_content]
 
-            message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
-
-            #new embedder
-            embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
-            embeddings = np.array(list(embedder.embed(chunks)))
-
-            if cancel_event.is_set():
-                 message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
-                 message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
-                 return
-
-            message_hub.send_message(collection_id, MessageType.INFO, "Embeddings created. Saving to Database....")
-
-            client = chromadb.PersistentClient(path="./chroma_data")
-            collection = client.get_or_create_collection(name=collection_id, metadata={"hnsw:space": "cosine"} )
-
-            ts = int(time.time())
-            # ---- batching logic ----
-            max_batch_size = 5000  # safe limit below Chroma's 5461 cap
-
-            batch_num = 1
-            for start in range(0, len(chunks), max_batch_size):
-                if cancel_event.is_set():
-                    message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
-                    message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
-                    return
-
-                end = start + max_batch_size
-
-                batch_chunks = chunks[start:end]
-                batch_embeddings = embeddings[start:end].tolist()
-
-                batch_ids = [
-                    f"{file_name}_{ts}_{i}"
-                    for i in range(start, min(end, len(chunks)))
-                ]
-
-                collection.upsert(
-                    documents=batch_chunks,
-                    embeddings=batch_embeddings,
-                    metadatas=[{"source": file_name, "chunk": i, "ts":ts} for i in range(start, min(end, len(chunks)))],
-                    ids=batch_ids
-                )
-
-                message_hub.send_message(collection_id, MessageType.INFO, f"Import of batch {batch_num} completed successfully")
-                batch_num += 1
-                
-            message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} completed successfully")
-            message_hub.send_message(collection_id, MessageType.LOG, f"SUCCESSFUL imported {file_extension.upper()} from {file_name} {len(chunks)} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.")
+            # delegate embedding + DB storage to helper
+            self._process_chunks_and_store(collection_id, file_name, file_extension, chunks, import_params, message_hub, cancel_event)
         except Exception as e:
             print("FAIL import_data", e)
             message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} failed: {e}")
@@ -173,7 +178,7 @@ class FileImport(ImportBase):
             
     
     async def step_1(self, collection_id: str, file_name: str, file_content_bytes: bytes, context: ImportContext, cancel_event:Event) -> None: # Modified signature
-        if context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == None or context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == 'false':
+        if not context.settings.check(SettingsName.TWO_STEP_IMPORT, 'True'):
             context.messageHub.send_message(collection_id, MessageType.INFO, "Set 2 Step mode to use this function")
             return
         
@@ -184,8 +189,36 @@ class FileImport(ImportBase):
 
     
     async def step_2(self, collection_id: str, context: ImportContext, cancel_event:Event) -> None: # Modified signature
-        if context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == None or context.settings.get_setting(SettingsName.TWO_STEP_IMPORT) == 'false':
+        if not context.settings.check(SettingsName.TWO_STEP_IMPORT, 'True'):
+             context.messageHub.send_message(collection_id, MessageType.INFO, "Set 2 Step mode to use this function")
              return
-        pass
+        
+        files = get_files_for_collection(context.db, collection_id)
+        if len(files) == 0:
+            return
+        
+        for file in files:
+            try:
+                if os.path.exists(file.path):
+                    with open(file.path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        
+                        if self.check_cancelled(collection_id, "", context.messageHub, cancel_event):
+                            return
+
+                        chunks = []
+                        if not context.parameters.settings.no_chunks:
+                            chunks = self.create_chunks(content, context.parameters.settings.chunk_size, context.parameters.settings.chunk_overlap)
+                        else:
+                            chunks = [content]
+
+                        # delegate embedding + DB storage to helper
+                        self._process_chunks_and_store(collection_id, file.source, "txt", chunks, context.parameters, context.messageHub, cancel_event)
+                else:
+                    print("File does not exist")
+            finally:
+                delete_file(context.db, file.id)
+                TempFileHelper.remove_temp(file.path)
+            
             
         
