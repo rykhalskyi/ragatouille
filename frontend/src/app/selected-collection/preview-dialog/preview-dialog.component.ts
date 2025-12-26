@@ -8,6 +8,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FilesService, File, FileImportSettings } from '../../client';
 import { ImportService } from '../../client';
 import { MatInput } from '@angular/material/input';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-preview-dialog',
@@ -21,18 +23,17 @@ import { MatInput } from '@angular/material/input';
     MatFormField,
     MatInput,
     MatError,
-    MatLabel
+    MatLabel,
+    MatSelectModule,
+    MatCheckboxModule
   ],
   templateUrl: './preview-dialog.component.html',
   styleUrls: ['./preview-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreviewDialogComponent implements OnInit {
-onImportSubmit() {
-throw new Error('Method not implemented.');
-}
 
-  importForm!: FormGroup;
+  chunkForm!: FormGroup;
   files: File[] = [];
   isLoading = true;
   error: string | null = null;
@@ -58,13 +59,15 @@ throw new Error('Method not implemented.');
   ) {}
 
   ngOnInit(): void {
-    this.importForm = this.formBuilder.group({
+    this.chunkForm = this.formBuilder.group({
       model: [this.data.model, Validators.required],
       chunkSize: [500, [Validators.required, Validators.min(1)]],
-      chunkOverlap: [50, [Validators.required, Validators.min(0)]]
+      chunkOverlap: [50, [Validators.required, Validators.min(0)]],
+      chunkType: ['default', Validators.required],
+      noChunks: [false]
     });
 
-    this.importForm.get('model')?.disable();
+    this.chunkForm.get('model')?.disable();
 
     FilesService.readFilesFilesCollectionIdGet(this.data.collectionId)
       .then(files => {
@@ -92,9 +95,9 @@ throw new Error('Method not implemented.');
     this.selectedFile = file;
     FilesService.getChunkPreviewFilesContentPost({
       file_id: file.id,
-      chunk_size: 500,
-      chunk_overlap: 50,
-      no_chunks: false,
+      chunk_size: this.chunkForm.get('chunkSize')?.value ?? 500,
+      chunk_overlap: this.chunkForm.get('chunkOverlap')?.value ?? 50,
+      no_chunks: this.chunkForm.get('noChunks')?.value ?? false,
       take_number: this.take,
       skip_number: this.skip
     }).then(res => {
@@ -120,5 +123,31 @@ throw new Error('Method not implemented.');
         this.currentChunkIndex--;
         this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
     }
+  }
+
+  updateChunks() {
+    
+ FilesService.getChunkPreviewFilesContentPost({
+      file_id: this.selectedFile!.id,
+      chunk_size: this.chunkForm.get('chunkSize')?.value ?? 500,
+      chunk_overlap: this.chunkForm.get('chunkOverlap')?.value ?? 50,
+      no_chunks: this.chunkForm.get('noChunks')?.value ?? false,
+      take_number: this.take,
+      skip_number: this.skip
+    }).then(res => {
+      
+      this.chunk.set(res.chunks[this.currentChunkIndex]);
+      this.moreChunks = res.more_chunks;
+      this.loadedChunks = res.chunks;
+    })
+
+  }
+
+  onChunkingChanged($event: MatSelectChange) {
+    throw new Error('Method not implemented.');
+  }
+
+  onImportSubmit() {
+    throw new Error('Method not implemented.');
   }
 }

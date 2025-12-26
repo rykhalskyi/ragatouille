@@ -19,7 +19,6 @@
 }
 
 .form-container {
-  padding-bottom: 16px;
   border-bottom: 1px solid #ccc;
   vertical-align: top;
 }
@@ -34,7 +33,7 @@
   display: grid;
   grid: 50px / auto;
   grid-gap: 16px; // Space between form fields
-  margin-bottom: 16px;
+ // margin-bottom: 16px;
 }
 
 .row1{
@@ -45,7 +44,8 @@
 
 .row2{
     grid-row: 2;
-    display: grid;
+    display: flex;
+    flex-direction: row;
     grid-gap: 16px;
 }
 
