@@ -37,6 +37,7 @@ export class PreviewDialogComponent implements OnInit {
 
   chunkForm!: FormGroup;
   files: File[] = [];
+  selectedFiles = new Set<string>();
   isLoading = true;
   error: string | null = null;
   chunk = signal<string>("");
@@ -74,6 +75,8 @@ export class PreviewDialogComponent implements OnInit {
     FilesService.readFilesFilesCollectionIdGet(this.data.collectionId)
       .then(files => {
         this.files = files;
+        // Initialize all files as selected by default
+        this.selectedFiles = new Set(files.map(f => f.source));
         this.isLoading = false;
         this.cdr.markForCheck();
       })
@@ -146,6 +149,18 @@ export class PreviewDialogComponent implements OnInit {
       this.loadedChunks = res.chunks;
     })
 
+  }
+
+  toggleFileSelection(file: File) {
+    if (this.selectedFiles.has(file.source)) {
+      this.selectedFiles.delete(file.source);
+    } else {
+      this.selectedFiles.add(file.source);
+    }
+  }
+
+  isFileSelected(file: File): boolean {
+    return this.selectedFiles.has(file.source);
   }
 
   onChunkingChanged($event: MatSelectChange) {

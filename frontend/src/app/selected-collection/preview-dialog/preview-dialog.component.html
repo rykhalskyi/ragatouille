@@ -13,9 +13,10 @@
       @if (!isLoading && !error) {
         <mat-nav-list class="scrollable-nav-list">
           @for (file of files; track file) {
-            <a mat-list-item (click)="onFileSelected(file)" [matTooltip]="file.source">
-              {{ file.source }}
-            </a>
+            <mat-list-item (click)="onFileSelected(file)" [matTooltip]="file.source">
+              <mat-checkbox [checked]="isFileSelected(file)" (change)="toggleFileSelection(file)" (click)="$event.stopPropagation()"></mat-checkbox>
+              <span>{{ file.source }}</span>
+            </mat-list-item>
           }
         </mat-nav-list>
       }
