@@ -76,7 +76,7 @@ export class PreviewDialogComponent implements OnInit {
       .then(files => {
         this.files = files;
         // Initialize all files as selected by default
-        this.selectedFiles = new Set(files.map(f => f.source));
+        this.selectedFiles = new Set(files.map(f => f.id));
         this.isLoading = false;
         this.cdr.markForCheck();
       })
@@ -94,7 +94,9 @@ export class PreviewDialogComponent implements OnInit {
     this.dialogRef.close({
         ...this.chunkForm.getRawValue(),
         collectionId: this.data.collectionId,
-        selectedFile: this.selectedFile});
+        selectedFile: this.selectedFile,
+        selectedFiles: Array.from(this.selectedFiles)
+    });
   }
 
   selectedFile: File | null = null;
@@ -152,15 +154,15 @@ export class PreviewDialogComponent implements OnInit {
   }
 
   toggleFileSelection(file: File) {
-    if (this.selectedFiles.has(file.source)) {
-      this.selectedFiles.delete(file.source);
+    if (this.selectedFiles.has(file.id)) {
+      this.selectedFiles.delete(file.id);
     } else {
-      this.selectedFiles.add(file.source);
+      this.selectedFiles.add(file.id);
     }
   }
 
   isFileSelected(file: File): boolean {
-    return this.selectedFiles.has(file.source);
+    return this.selectedFiles.has(file.id);
   }
 
   onChunkingChanged($event: MatSelectChange) {

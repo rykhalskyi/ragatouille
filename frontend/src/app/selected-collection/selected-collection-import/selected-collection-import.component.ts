@@ -287,8 +287,10 @@ openPreviewDialog() {
       return;
 }
   async handle2ndStepFileImport(result: any, selectedImportType: Import) {
-     const formData = this.buildUrlFormData(selectedImportType, result);
-     console.log("form_data",formData);
+    const selectedFiles: string[] = result.selectedFiles || [];
+    const formData = this.buildUrlFormData(selectedImportType, result);
+    console.log("selected files:", selectedFiles);
+
     try {
       await ImportService.importFileStep2ImportStep2CollectionIdPost(result.collectionId, formData);
       console.log('Url imported successfully');
