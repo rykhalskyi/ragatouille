@@ -116,7 +116,7 @@ async def import_file_step_1(collection_id: str, import_params: str = Form(...),
         content={"message": str(e)}) 
     
 @router.post("/step2/{collection_id}")
-async def import_file_step_2(collection_id: str, import_params: str = Form(...),  db: Connection = Depends(get_db_connection), task_dispatcher = Depends(get_task_dispatcher), message_hub:MessageHub = Depends(get_message_hub)):
+async def import_file_step_2(collection_id: str, import_files_ids: List[str], import_params: str = Form(...),  db: Connection = Depends(get_db_connection), task_dispatcher = Depends(get_task_dispatcher), message_hub:MessageHub = Depends(get_message_hub)):
     try:
         
         task_name = f"Importing to {collection_id} step 2"
@@ -131,7 +131,7 @@ async def import_file_step_2(collection_id: str, import_params: str = Form(...),
         if (collection == None):
             return {"message": "Collection not found."}
                
-        task_dispatcher.add_task(collection_id, task_name, FileImport().step_2, import_context)
+        task_dispatcher.add_task(collection_id, task_name, FileImport().step_2, import_context, import_files_ids)
         
         if collection and collection.import_type == ImportType.NONE:
             crud_collection.update_collection_import_type(db, collection_id, import_params_model)

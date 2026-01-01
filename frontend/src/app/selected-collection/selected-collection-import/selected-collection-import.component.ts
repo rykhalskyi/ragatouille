@@ -292,7 +292,10 @@ openPreviewDialog() {
     console.log("selected files:", selectedFiles);
 
     try {
-      await ImportService.importFileStep2ImportStep2CollectionIdPost(result.collectionId, formData);
+      await ImportService.importFileStep2ImportStep2CollectionIdPost(result.collectionId, {
+        import_files_ids: selectedFiles,
+        import_params: formData.import_params
+      });
       console.log('Url imported successfully');
     } catch (error) {
       console.error('Error importing Url:', error);

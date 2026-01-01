@@ -190,7 +190,7 @@ class FileImport(ImportBase):
         context.messageHub.send_message(collection_id, MessageType.UNLOCK, f"Step 1 of import of {file_name} completed successfully")
 
     
-    async def step_2(self, collection_id: str, context: ImportContext, cancel_event:Event) -> None: # Modified signature
+    async def step_2(self, collection_id: str, context: ImportContext, files_ids: List[str], cancel_event:Event) -> None: # Modified signature
         if not context.settings.check(SettingsName.TWO_STEP_IMPORT, 'True'):
              context.messageHub.send_message(collection_id, MessageType.INFO, "Set 2 Step mode to use this function")
              return
@@ -201,6 +201,8 @@ class FileImport(ImportBase):
         
         for file in files:
             try:
+                if file.id not in files_ids:
+                    continue
                 if os.path.exists(file.path):
                     with open(file.path, "r", encoding="utf-8") as f:
                         content = f.read()
