@@ -1,41 +1,55 @@
 # Technology Stack
 
 ## Project Type
-This project is a single-page web application (SPA) that provides a frontend for the `ragatouille` API.
+This project is a single-page web application (SPA) that provides a frontend interface for the RAGatouille service.
 
 ## Core Technologies
 
 ### Primary Language(s)
-- **Language**: **TypeScript** `~5.8.0`
-- **Framework**: **Angular** `~20.3.12`
-- **Styling**: **SCSS**
+- **Language**: TypeScript (~5.8.0)
+- **Runtime/Compiler**: Angular CLI (^20.3.10)
 
-### Key Dependencies
-- **@angular/common, core, forms, platform-browser, router**: Core Angular framework modules.
-- **@angular/cdk, @angular/material**: **Angular Material** (`~20.2.13`) for UI components.
-- **rxjs**: `~7.8.0` for reactive programming.
-- **@ngneat/until-destroy**: `^10.0.0` for automatic subscription management.
-- **zone.js**: `~0.15.0` for Angular's change detection mechanism.
+### Key Dependencies/Libraries
+- **Angular**: ^20.3.12 (Core framework for building the application)
+- **Angular Material**: ^20.2.13 (UI component library)
+- **RxJS**: ~7.8.0 (Reactive programming library for handling asynchronous operations)
+- **@ngneat/until-destroy**: ^10.0.0 (Handles subscription cleanup automatically)
 
 ### Application Architecture
-- **Component-Based SPA**: The application is built as a single-page application using Angular's component architecture.
-- **Client-Server**: It communicates with a backend via a RESTful API. The client is generated from an OpenAPI specification.
+The application follows a client-server architecture. It is a standalone SPA that communicates with a backend API.
+
+### Data Storage (if applicable)
+- The frontend does not have its own data storage. It retrieves all data from the backend API.
+
+### External Integrations (if applicable)
+- **APIs**: Communicates with the RAGatouille backend API. The API endpoint is configurable.
 
 ## Development Environment
 
 ### Build & Development Tools
-- **Package Management**: **npm**
-- **Build System**: **Angular CLI** (`@angular-devkit/build-angular` `~20.3.10`)
-- **Development workflow**: `ng serve` provides a local development server with live reloading.
+- **Build System**: Angular CLI (`ng build`, `ng serve`) orchestrated via npm scripts.
+- **Package Management**: npm
+- **Development workflow**: The development server supports hot reloading (`ng serve`).
 
 ### Code Quality Tools
-- **Static Analysis / Type Checking**: **TypeScript** compiler with `strict` mode enabled (`"strict": true` in `tsconfig.json`).
-- **Formatting**: Adherence to Angular's official style guide.
-- **Testing Framework**: **Playwright** (`^1.56.1`) for End-to-End (E2E) testing.
+- **Static Analysis**: TypeScript compiler with strict settings.
+- **Formatting**: `.editorconfig` enforces basic styling.
+- **Testing Framework**: Playwright (^1.56.1) for end-to-end testing.
 
 ### Version Control & Collaboration
-- **VCS**: **Git**
+- **VCS**: Git
 
-## Deployment & Distribution
-- **Target Platform**: Web browsers.
-- **Distribution Method**: The application is built into static files (HTML, CSS, JS) and can be served by any web server or CDN.
+## Deployment & Distribution (if applicable)
+- **Target Platform(s)**: The application is deployed via Docker.
+- **Distribution Method**: A multi-stage `Dockerfile` builds the application and serves it using an Nginx web server.
+- **Installation Requirements**: Docker is required for deployment.
+- **Update Mechanism**: Updates are delivered by rebuilding and deploying the Docker image.
+
+## Technical Requirements & Constraints
+
+### Compatibility Requirements  
+- **Platform Support**: Runs in any modern web browser that supports Angular 20. The development and deployment environment is based on Node.js 20 and Docker.
+- **Dependency Versions**: Key dependencies are managed in `package.json`.
+
+### Security & Compliance
+- **Security Requirements**: The application relies on the security of the backend API. The `apiUrl` is injected at build time.

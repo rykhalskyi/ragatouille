@@ -1,58 +1,137 @@
-# Frontend Code Style Guide
+# Code Style and Best Practices
 
-This document outlines the code style conventions and best practices for the `ragatouille` frontend application.
+This document outlines the coding standards and best practices for the RAGatouille frontend application, which is built with Angular and TypeScript.
 
-## 1. Naming Conventions
+---
 
-- **Files**: Use `kebab-case` for all files (e.g., `my-component.component.ts`).
-- **Classes & Interfaces**: Use `PascalCase` (e.g., `class MyComponent {}`).
-- **Methods & Properties**: Use `camelCase` (e.g., `myProperty: string;`).
-- **Constants**: Use `UPPER_SNAKE_CASE` for global or static constants (e.g., `const BASE_URL = '/api';`).
+# Foundational Principles
 
-## 2. Component Design
+This project adheres to established software engineering principles to ensure the codebase is robust, maintainable, and scalable.
 
-- **`OnPush` Change Detection**: For better performance, all new components should use `ChangeDetectionStrategy.OnPush`. This is especially important for presentational ("dumb") components.
-  ```typescript
-  @Component({
-    selector: 'app-my-component',
-    templateUrl: './my-component.html',
-    styleUrls: ['./my-component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-  })
-  export class MyComponent { ... }
-  ```
-- **Lifecycle Hooks**: Use `@ngneat/until-destroy` to automatically unsubscribe from observables when a component is destroyed. Avoid manual `ngOnDestroy` logic for subscriptions where possible.
-- **Inputs & Outputs**: Use `@Input()` to pass data into a component and `@Output()` to emit events out of it. Avoid direct parent-child dependencies.
+*   **SOLID:** Applied through Angular's architecture (Dependency Injection, Component-based structure).
+*   **KISS (Keep It Simple, Stupid):** Prefer simple, straightforward solutions over complex ones.
+*   **YAGNI (You Ain't Gonna Need It):** Do not add functionality until it is deemed necessary.
+*   **DRY (Don't Repeat Yourself):** Avoid duplicating code. Use services for shared logic and variables for shared values.
 
-## 3. State Management
+---
 
-- **Service-Based State**: For any state that needs to be shared across multiple components, create an Angular service. Use RxJS `BehaviorSubject` or `signal` within the service to manage and expose the state as an observable.
-- **Avoid Component-Level State for Shared Data**: Do not store shared data directly in component properties if it can be managed by a service.
+# Specific Guidelines
 
-## 4. Styling (SCSS)
+## Use Standalone Components
 
-- **Centralize Variables (DRY)**: Do not use hardcoded pixel values, colors, or fonts directly in component styles. Instead, define and use SCSS variables from the central `src/styles/_variables.scss` file.
-  ```scss
-  // GOOD
-  @import 'variables';
-  .my-component {
-    padding: $spacing-medium;
-    height: $topbar-height;
+**Problem:**
+In older Angular versions, `NgModule` was required for every feature, leading to boilerplate and tight coupling.
+
+**Recommendation:**
+Use Angular's standalone components, directives, and pipes. This simplifies the architecture by allowing components to manage their own dependencies directly.
+
+```typescript
+// Good: Standalone component with direct dependency imports
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({
+  selector: 'app-simple-button',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule], // Dependencies are declared here
+  template: `<button mat-raised-button>Click me</button>`,
+})
+export class SimpleButtonComponent {}
+```
+
+**Rationale:**
+Reduces boilerplate, improves modularity, and makes components more reusable and easier to reason about.
+
+---
+
+## Centralize Global Styles and Variables
+
+**Problem:**
+Hardcoding values like colors, fonts, or layout sizes across multiple component stylesheets makes maintenance difficult and leads to an inconsistent UI.
+
+**Recommendation:**
+Define shared styles and variables in a central location.
+
+1.  **Define CSS variables** in `src/styles.scss` for global values.
+    ```scss
+    // src/styles.scss
+    :root {
+      --primary-color: #3f51b5;
+      --topbar-height: 64px;
+    }
+    ```
+2.  **Use the variables** in component stylesheets.
+    ```scss
+    // some-component.scss
+    .header {
+      background-color: var(--primary-color);
+      height: var(--topbar-height);
+    }
+    ```
+
+**Rationale:**
+Follows the DRY principle. Ensures a consistent look and feel and makes rebranding or theme adjustments simple by changing values in a single file.
+
+---
+
+## Manage RxJS Subscriptions
+
+**Problem:**
+Failing to unsubscribe from RxJS Observables in components can lead to memory leaks and unexpected behavior when the component is destroyed.
+
+**Recommendation:**
+Use the `@ngneat/until-destroy` library to automatically manage subscription cleanup.
+
+1.  **Add the `@UntilDestroy()` decorator** to your component.
+2.  **Pipe the `untilDestroyed(this)`** operator onto your subscription.
+
+```typescript
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+// ...
+
+@UntilDestroy()
+@Component(...)
+export class MyComponent implements OnInit, OnDestroy {
+  ngOnInit() {
+    myObservable$
+      .pipe(untilDestroyed(this))
+      .subscribe(value => {
+        // ...
+      });
   }
+}
+```
 
-  // BAD
-  .my-component {
-    padding: 16px;
-    height: 64px;
-  }
-  ```
-- **Scoped Styles**: All styles should be encapsulated within the component's SCSS file. Avoid global styles unless absolutely necessary.
+**Rationale:**
+This provides a clean, declarative way to handle unsubscriptions, reducing boilerplate (`ngOnDestroy`) and preventing memory leaks.
 
-## 5. Templates (HTML)
+---
 
-- **Use `@if` and `@for`**: Prefer the new built-in control flow (`@if`, `@for`) over the older `*ngIf` and `*ngFor` directives for better performance and type checking.
+## Use Type-Safe Forms
 
-## 6. General Principles
+**Problem:**
+Using non-typed `FormGroup` or `FormControl` can lead to runtime errors and makes it difficult to reason about the form's data structure.
 
-- **Immutability**: Treat data as immutable where possible. When updating state in a service or component, create a new object or array rather than mutating the existing one. This works well with `OnPush` change detection.
-- **Remove Dead Code**: Regularly remove unused variables, properties, methods, and components to keep the codebase clean.
+**Recommendation:**
+Use Angular's typed forms to define the shape of the form data.
+
+```typescript
+// Good: Typed form group
+import { FormControl, FormGroup } from '@angular/forms';
+
+interface LoginForm {
+  email: FormControl<string | null>;
+  password: FormControl<string | null>;
+}
+
+const loginForm = new FormGroup<LoginForm>({
+  email: new FormControl(''),
+  password: new FormControl(''),
+});
+
+const emailValue = loginForm.value.email; // Type is string | undefined
+```
+
+**Rationale:**
+Improves developer experience with autocompletion and compile-time checks, reducing the risk of bugs related to form controls and their values.
