@@ -14,6 +14,7 @@ export type { Body_import_url_import_url__colletion_id__post } from './models/Bo
 export type { Body_import_url_step_1_import_url_step1__collection_id__post } from './models/Body_import_url_step_1_import_url_step1__collection_id__post';
 export type { ChunkPreviewRequest } from './models/ChunkPreviewRequest';
 export type { ChunkPreviewResponse } from './models/ChunkPreviewResponse';
+export { ChunkType } from './models/ChunkType';
 export type { Collection } from './models/Collection';
 export type { CollectionCreate } from './models/CollectionCreate';
 export type { CollectionDetails } from './models/CollectionDetails';

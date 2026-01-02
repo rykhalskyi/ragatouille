@@ -19,9 +19,8 @@ class Chunker:
         return text_splitter.split_text(text)
 
     def create_chunks(self, text: str, chunk_type: ChunkType, chunk_size: int, chunk_overlap: int) -> List[str]:
-        if chunk_type == ChunkType.DEFAULT:
-            return self._chunk_default(text, chunk_size, chunk_overlap)
-        elif chunk_type == ChunkType.RECURSIVE_CHARACTER:
-            return self._chunk_recursive(text, chunk_size, chunk_overlap)
-        else:
-            return []
+        match chunk_type:
+            case ChunkType.RECURSIVE_CHARACTER:
+                return self._chunk_recursive(text, chunk_size, chunk_overlap)
+            case _:
+                return self._chunk_default(text, chunk_size, chunk_overlap)
