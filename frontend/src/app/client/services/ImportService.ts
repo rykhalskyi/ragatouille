@@ -24,6 +24,17 @@ export class ImportService {
         });
     }
     /**
+     * Get Chunk Types
+     * @returns string Successful Response
+     * @throws ApiError
+     */
+    public static getChunkTypesImportChunktypesGet(): CancelablePromise<Array<string>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/import/chunktypes/',
+        });
+    }
+    /**
      * Import File
      * @param collectionId
      * @param formData
