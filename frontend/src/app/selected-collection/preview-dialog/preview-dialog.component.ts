@@ -114,42 +114,68 @@ export class PreviewDialogComponent implements OnInit {
 
   onFileSelected(file: File): void {
     this.selectedFile = file;
-    FilesService.getChunkPreviewFilesContentPost({
-      file_id: file.id,
-      chunk_type: this.chunkForm.get('chunkType')?.value ?? "default",
-      chunk_size: this.chunkForm.get('chunkSize')?.value ?? 500,
-      chunk_overlap: this.chunkForm.get('chunkOverlap')?.value ?? 50,
-      no_chunks: this.chunkForm.get('noChunks')?.value ?? false,
-      take_number: this.take,
-      skip_number: this.skip
-    }).then(res => {
-      console.log("res",res);
-      this.currentChunkIndex = 0;
-      this.chunk.set(res.chunks[this.currentChunkIndex]);
-      this.moreChunks = res.more_chunks;
-      this.loadedChunks = res.chunks;
-    })
+    this.skip = 0;
+    this.updateChunks().then(() => {
+        this.currentChunkIndex = 0;
+        if (this.loadedChunks.length > 0) {
+            this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+        } else {
+            this.chunk.set("No chunks found.");
+        }
+        this.cdr.markForCheck();
+    });
   }
 
   onNext() {
-    if (this.currentChunkIndex < this.take - 1)
-    {
-        this.currentChunkIndex++;
-        this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+    if (this.currentChunkIndex < this.loadedChunks.length - 1) {
+      this.currentChunkIndex++;
+      this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+    } else if (this.moreChunks) {
+      this.skip += this.take;
+      this.updateChunks().then(() => {
+        this.currentChunkIndex = 0;
+        if (this.loadedChunks.length > 0) {
+          this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+        }
+        this.cdr.markForCheck();
+      });
     }
   }
 
   onPrevious() {
-    if (this.currentChunkIndex > 0)
-    {
-        this.currentChunkIndex--;
-        this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+    if (this.currentChunkIndex > 0) {
+      this.currentChunkIndex--;
+      this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+    } else if (this.skip > 0) {
+      this.skip -= this.take;
+      this.updateChunks().then(() => {
+        this.currentChunkIndex = this.loadedChunks.length - 1;
+        if (this.loadedChunks.length > 0) {
+          this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+        }
+        this.cdr.markForCheck();
+      });
     }
   }
 
+  onUpdateChunks(): void {
+    if (!this.selectedFile) {
+      return;
+    }
+    this.skip = 0;
+    this.updateChunks().then(() => {
+      this.currentChunkIndex = 0;
+      if (this.loadedChunks.length > 0) {
+        this.chunk.set(this.loadedChunks[this.currentChunkIndex]);
+      } else {
+        this.chunk.set('No chunks found.');
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
   updateChunks() {
-    
- FilesService.getChunkPreviewFilesContentPost({
+    return FilesService.getChunkPreviewFilesContentPost({
       file_id: this.selectedFile!.id,
       chunk_type: this.chunkForm.get('chunkType')?.value ?? "default",
       chunk_size: this.chunkForm.get('chunkSize')?.value ?? 500,
@@ -158,12 +184,9 @@ export class PreviewDialogComponent implements OnInit {
       take_number: this.take,
       skip_number: this.skip
     }).then(res => {
-      
-      this.chunk.set(res.chunks[this.currentChunkIndex]);
       this.moreChunks = res.more_chunks;
       this.loadedChunks = res.chunks;
-    })
-
+    });
   }
 
   toggleFileSelection(file: File) {
