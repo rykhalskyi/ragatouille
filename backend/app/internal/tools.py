@@ -1,6 +1,10 @@
 import chromadb
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from app.database import get_db_connection
 from app.crud.crud_collection import get_enabled_collections_for_mcp
+
+# Initialize embedder
+embedder = SentenceTransformerEmbeddingFunction(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 def register_tools(mcp_server, mcp_manager):
     """
@@ -37,8 +41,10 @@ def register_tools(mcp_server, mcp_manager):
         try:
             client = chromadb.PersistentClient(path="./chroma_data")
             collection = client.get_collection(name=collection_name)
+            # Generate embedding for query text
+            query_embedding = embedder([query_text])[0]
             results = collection.query(
-                query_texts=[query_text], n_results=n_results
+                query_embeddings=[query_embedding], n_results=n_results
             )
             return {"status": "success", "results": results}
         except ValueError:

@@ -1,0 +1,61 @@
+# .gemini/commands/ragatouille/search.toml
+
+name = "ragatouille.search"
+description = "Describes the best practice for searching information in the rag-test mcp server."
+
+prompt = """
+# RAGatouille Search Strategy
+
+This document outlines the most effective, multi-step strategy for finding precise information within a RAG (Retrieval-Augmented Generation) collection on the `rag-test` server.
+
+## The Strategy: "Broad to Narrow to Context"
+
+The core principle is an iterative refinement process that uses the available tools (`query_collection` and `get_chunks_by_id`) in a specific sequence.
+
+### Step 1: Initial Broad Query
+
+**Goal:** To get a general sense of where the information might be and to identify specific keywords or section headings.
+
+**Action:**
+Use the `query_collection` tool with a natural language query provided by the user.
+
+**Example:**
+If the user asks "How do I put my car in free-wheeling mode?", the initial query would be:
+`query_collection(collection_name='Test2', query_text='How do I put my car in free-wheeling mode?', n_results=5)`
+
+### Step 2: Analyze and Refine Search
+
+**Goal:** To narrow down the search using more precise terms found in the initial results.
+
+**Action:**
+1.  Carefully read the `documents` returned from Step 1.
+2.  Identify more specific, technical keywords (e.g., "Free-wheeling", "Neutral", "Release procedure").
+3.  Use these keywords in a new, more focused `query_collection` call. This helps to filter out noise.
+
+**Example:**
+The initial results might contain the term "Free-wheeling". The refined query would be:
+`query_collection(collection_name='Test2', query_text='Free-wheeling section', n_results=10)`
+
+### Step 3: Contextual Expansion
+
+**Goal:** To reconstruct the full, original context of a relevant piece of information, as RAG returns small chunks, not full pages.
+
+**Action:**
+1.  From the refined search in Step 2, identify the ID of the most relevant chunk (e.g., `citroen_manual_en.pdf_1767810529_614`).
+2.  Use the `get_chunks_by_id` tool to retrieve not only that specific chunk but also its immediate neighbors. The chunk IDs are often sequential, so you can infer the neighbors (e.g., `_613`, `_615`).
+3.  This step is crucial for understanding lists, procedures, and warnings that are split across multiple chunks.
+
+**Example:**
+`get_chunks_by_id(collection_name='Test2', ids=['citroen_manual_en.pdf_1767810529_613', 'citroen_manual_en.pdf_1767810529_614', 'citroen_manual_en.pdf_1767810529_615'])`
+
+### Step 4: Synthesize and Present
+
+**Goal:** To provide a clear, comprehensive, and human-readable answer to the user.
+
+**Action:**
+1.  Combine the text from the multiple chunks retrieved in Step 3.
+2.  Organize the information logically, removing any repeated or irrelevant parts from the chunk overlap.
+3.  Present the final, synthesized answer to the user.
+
+This iterative "Broad to Narrow to Context" approach ensures both high relevance and completeness, overcoming the fragmented nature of RAG retrieval.
+"""
