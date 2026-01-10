@@ -23,7 +23,6 @@ def get_chunk_preview(request: ChunkPreviewRequest, db: Connection = Depends(get
         filename = get_file(db, request.file_id)
         content = TempFileHelper.get_temp_file_content(filename.path)
         
-        importer = FileImport()
         all_chunks = []
         if not request.no_chunks:
             all_chunks =  Chunker().create_chunks(content, request.chunk_type , request.chunk_size, request.chunk_overlap)

@@ -1,4 +1,4 @@
-description = "Creates requirements.md based on issue ticket from github for <issue_number>"
+description = "Creates requirements.md and design.md based on issue ticket from github for <issue_number>"
 prompt = """
 
 Create a file requiements-{{args}}.md and design-{{args}}.md in folder .design-specs/specs/ int the root directory of this

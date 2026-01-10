@@ -1,10 +1,11 @@
 import chromadb
-from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+from fastembed import TextEmbedding
+import numpy as np
 from app.database import get_db_connection
 from app.crud.crud_collection import get_enabled_collections_for_mcp
 
 # Initialize embedder
-embedder = SentenceTransformerEmbeddingFunction(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
 
 def register_tools(mcp_server, mcp_manager):
     """
@@ -42,15 +43,17 @@ def register_tools(mcp_server, mcp_manager):
             client = chromadb.PersistentClient(path="./chroma_data")
             collection = client.get_collection(name=collection_name)
             # Generate embedding for query text
-            query_embedding = embedder([query_text])[0]
+            query_embedding = list(embedder.embed([query_text]))[0].tolist()
+
             results = collection.query(
-                query_embeddings=[query_embedding], n_results=n_results
+                query_embeddings=[query_embedding],
+                n_results=n_results,
             )
             return {"status": "success", "results": results}
-        except ValueError:
+        except ValueError as e:
             return {
                 "status": "error",
-                "message": f"Collection '{collection_name}' not found.",
+                "message": f"Collection '{collection_name}' not found. {str(e)}",
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
