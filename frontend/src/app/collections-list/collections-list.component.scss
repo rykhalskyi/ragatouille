@@ -1,3 +1,29 @@
-.add-topic-button{
-    margin-left: 16px;
+.collection-item-grid { /* New class for grid layout */
+  display: grid;
+  grid-template-columns: auto 1fr; /* Two columns: marker auto width, title takes remaining space */
+  align-items: center; /* Center items vertically within the grid row */
+  gap: 10px; /* Add a gap between grid columns */
+  padding: 8px 16px; /* Added padding to match typical list item spacing */
+  width: 100%; /* Ensure the grid container takes full width of the list item */
+}
+
+.collection-status-marker {
+  display: inline-block; /* Keep as inline-block for the span itself */
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  
+}
+
+span[matListItemTitle] {
+  /* flex-grow is not needed with grid-template-columns: 1fr */
+  grid-column: 2; /* Assign the title to the second column */
+}
+
+.collection-status-marker.enabled {
+  background-color: #4CAF50; /* Green */
+}
+
+.collection-status-marker.disabled {
+  background-color: #F44336; /* Red */
 }

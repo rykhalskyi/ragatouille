@@ -10,12 +10,22 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { CollectionRefreshService } from '../collection-refresh.service';
 import { Subscription } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { MatTooltipModule } from '@angular/material/tooltip'; // Import MatTooltipModule
+// Removed: BrowserAnimationsModule import as it might cause BrowserModule conflicts
 
 @UntilDestroy()
 @Component({
   selector: 'app-collections-list',
   standalone: true,
-  imports: [MatListModule, MatIconModule, CommonModule, MatButtonModule, MatDialogModule],
+  imports: [
+    MatListModule,
+    MatIconModule,
+    CommonModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatTooltipModule, // Add MatTooltipModule here
+    // Removed: BrowserAnimationsModule
+  ],
   templateUrl: './collections-list.component.html',
   styleUrl: './collections-list.component.scss'
 })
@@ -23,7 +33,7 @@ export class CollectionsListComponent implements OnInit, OnDestroy {
   collections: Collection[] = [];
   private refreshSubscription: Subscription;
 
-  constructor(private router: Router, 
+  constructor(private router: Router,
     private collectionRefreshService: CollectionRefreshService,) {
     this.refreshSubscription = this.collectionRefreshService.refreshNeeded$
     .pipe(untilDestroyed(this))
@@ -55,5 +65,3 @@ export class CollectionsListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/collection', collectionId]);
   }
 }
-
-
