@@ -15,7 +15,7 @@ const commands = [
     )
 ];
 
-export function get_Commands(entityName){
+export function get_commands(entityName){
     for (const item of commands)
     {
         item.entityName = entityName;

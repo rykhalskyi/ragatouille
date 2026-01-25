@@ -24,7 +24,7 @@ class ExtensionManager:
         self.incoming_message_queue: queue.Queue = queue.Queue()
         self.clients: Dict[str, queue.Queue] = {}
         self.client_id_counter = 0
-        self.heartbeat_interval_seconds: int = 30 # Default heartbeat interval
+        self.heartbeat_interval_seconds: int = 60 # Default heartbeat interval
         self._heartbeat_thread: Optional[threading.Thread] = None
         self._stop_heartbeat_event = threading.Event()
         print("INFO: ExtensionManager initialized (singleton pattern).")
@@ -128,6 +128,13 @@ class ExtensionManager:
                 break
 
             print("DEBUG: Running heartbeat check...")
+            ping_message = WebSocketMessage(
+                    id=str(uuid.uuid4()),
+                    timestamp=datetime.now().isoformat(),
+                    topic="ping",
+                    message="ping")
+            
+            self.broadcast_message(ping_message)
             # Placeholder for actual heartbeat logic
             pass
         print("INFO: Heartbeat thread stopped.")

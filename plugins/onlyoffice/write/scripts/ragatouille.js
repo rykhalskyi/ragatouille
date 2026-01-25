@@ -1,4 +1,4 @@
-import { get_Commands as get_commands } from './commands.js';
+import { get_commands } from './commands.js';
 
 let client = null;
 let connected = false;
@@ -34,6 +34,16 @@ function connectClick() {
 
         client.onMessage = async (event) => {
             console.log('Message from server:', event.data);
+            const message = JSON.parse(event.data);
+
+            switch (message.topic) {
+                case "ping":
+                    console.log("Ping payload:", message.payload);
+                    client.send(JSON.stringify({type: "pong", payload: message.timestamp}));
+                    break;
+                default:
+                    console.warn("Unknown message type:", message.type);
+            }
 
             // You can call any plugin API method from here.
             // For example, let's get the editor version as you asked.
