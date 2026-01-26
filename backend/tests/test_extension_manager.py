@@ -99,7 +99,7 @@ class TestExtensionManager(unittest.TestCase):
         self.manager.process_incoming_message(client_id, ping_message_data)
         
         self.assertIn(client_id, self.manager.client_metadata)
-        self.assertEqual(self.manager.client_metadata[client_id]["name"], "Test App")
+        self.assertEqual(self.manager.client_metadata[client_id].application_name, "test_app")
 
     def test_process_unknown_message_type(self):
         """Test processing a message with an unknown type."""
@@ -173,7 +173,7 @@ class TestExtensionManager(unittest.TestCase):
                 # 1. Client waits for the command from the manager
                 command_message: WebSocketMessage = client_queue.get(timeout=2)
                 
-                self.assertEqual(command_message.topic, "test_command")
+                self.assertEqual(command_message.topic, "call_command")
                 self.assertIsNotNone(command_message.correlation_id)
                 
                 # 2. Client processes and sends a response
@@ -194,8 +194,8 @@ class TestExtensionManager(unittest.TestCase):
             # 3. Main thread sends a command and awaits the response
             response = await send_command_and_wait_for_response(
                 client_id=client_id,
-                command="test_command",
-                payload={"data": "some_input"},
+                command_name="test_command",
+                command_input={"data": "some_input"},
                 timeout=5
             )
             # 4. Assert the response is what the client sent
@@ -218,8 +218,8 @@ class TestExtensionManager(unittest.TestCase):
             with self.assertRaises(asyncio.TimeoutError):
                 await send_command_and_wait_for_response(
                     client_id=client_id,
-                    command="test_command",
-                    payload={"data": "some_input"},
+                    command_name="test_command",
+                    command_input={"data": "some_input"},
                     timeout=0.1  # Use a short timeout
                 )
             

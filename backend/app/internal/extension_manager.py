@@ -4,10 +4,12 @@ import queue
 import threading
 import uuid
 from datetime import datetime
-from typing import Any, Optional, Set, Dict, Callable, Coroutine
+from typing import Any, Optional, Set, Dict, Callable, Coroutine, List
+from pydantic import ValidationError
 
 from asyncio import Future
-from app.schemas.websocket import WebSocketMessage, ClientMessage # Import actual Pydantic models
+from app.schemas.websocket import WebSocketMessage, ClientMessage
+from app.schemas.mcp import ExtensionTool, SupportedCommand
 
 class ExtensionManager:
     _instance = None
@@ -25,7 +27,7 @@ class ExtensionManager:
         self.db: Optional[Connection] = None
         self.incoming_message_queue: queue.Queue = queue.Queue()
         self.clients: Dict[str, queue.Queue] = {}
-        self.client_metadata: Dict[str, Dict] = {}
+        self.client_metadata: Dict[str, ExtensionTool] = {}
         self.pending_async_requests: Dict[str, Future] = {}
         self.client_id_counter = 0
         self.heartbeat_interval_seconds: int = 60 # Default heartbeat interval
@@ -85,39 +87,56 @@ class ExtensionManager:
         else:
             print(f"WARNING: Client {client_id} not found, cannot send message.")
 
+    def get_registered_extension_tools(self) -> List[ExtensionTool]:
+        """Returns a list of all currently registered extension tools."""
+        return list(self.client_metadata.values())
+
     def process_incoming_message(self, client_id: str, message_data: Dict[str, Any]):
         """Processes a message received from a client."""
         try:
-            # Check if it's a response to a pending async request
             correlation_id = message_data.get("correlation_id")
             if correlation_id and correlation_id in self.pending_async_requests:
                 future = self.pending_async_requests.pop(correlation_id)
-                # Resolve the future in a thread-safe way
                 future.get_loop().call_soon_threadsafe(future.set_result, message_data)
                 print(f"INFO: Resolved async request for correlation_id: {correlation_id}")
                 return
 
-            client_message = ClientMessage(**message_data) 
+            client_message = ClientMessage(**message_data)
             print(f"INFO: Received message from client {client_id}: Type='{client_message.type}', Payload={client_message.payload}")
-            
+
             if client_message.type == "command_response":
                 print(f"INFO: Received command response from {client_id}. This should have a correlation_id.")
-                # This case is now handled by the correlation_id check at the beginning
-                pass
 
             elif client_message.type == "ping":
-                if client_message.payload and isinstance(client_message.payload, list) and len(client_message.payload) > 0:
-                    first_item = client_message.payload[0]
-                    if isinstance(first_item, dict) and "app" in first_item and "entityName" in first_item:
-                        metadata = {
-                            "name": first_item.get("name"),
-                            "description": first_item.get("description"),
-                            "inputScheme": first_item.get("inputSchema"),
-                            "app": first_item.get("app"),
-                            "entityName": first_item.get("entityName")
-                        }
-                        self.client_metadata[client_id] = metadata
-                        print(f"INFO: Updated metadata for client {client_id}: {metadata}")
+                try:
+                    payload = client_message.payload
+                    if isinstance(payload, list) and len(payload) > 0:
+                        first_item = payload[0]
+                        app_name = first_item.get("app")
+                        entity_name = first_item.get("entityName")
+
+                        supportedCommand = []
+                        for command in payload:
+                            commands_data = SupportedCommand(
+                               name = command.get("name"),
+                               description=command.get("description"),
+                               inputSchema=command.get("input") or "no input parameters"
+                            )
+                           
+                            supportedCommand.append(commands_data)
+
+                        extension_tool = ExtensionTool(
+                            client_id=client_id,
+                            application_name=app_name,
+                            user_entity_name=entity_name,
+                            supported_commands=supportedCommand
+                        )
+                        
+                        self.client_metadata[client_id] = extension_tool
+                        
+                except (ValidationError, TypeError, AttributeError) as e:
+                    print(f"WARNING: Malformed ping payload from client {client_id}: {e}")
+
                 response_message = WebSocketMessage(
                     id=str(uuid.uuid4()),
                     timestamp=datetime.now().isoformat(),
@@ -125,9 +144,9 @@ class ExtensionManager:
                     message="pong"
                 )
                 self.send_message_to_client(client_id, response_message)
+
             elif client_message.type == "command":
                 print(f"INFO: Processing command from {client_id} with payload: {client_message.payload}")
-                # TODO: Implement command processing logic here.
                 pass
             else:
                 print(f"WARNING: Unknown message type from client {client_id}: {client_message.type}")
@@ -138,7 +157,7 @@ class ExtensionManager:
                     message=f"Unknown command type: {client_message.type}"
                 )
                 self.send_message_to_client(client_id, error_response)
-                
+
         except Exception as e:
             print(f"ERROR: Error processing incoming message from client {client_id}: {e}")
             error_response = WebSocketMessage(
@@ -147,7 +166,6 @@ class ExtensionManager:
                 topic="error",
                 message=f"Server error processing message: {e}"
             )
-            # Avoid sending an error response if the client is gone
             if client_id in self.clients:
                 self.send_message_to_client(client_id, error_response)
 
@@ -209,8 +227,8 @@ class ExtensionManager:
 
 async def send_command_and_wait_for_response(
     client_id: str, 
-    command: str, 
-    payload: Any, 
+    command_name: str, 
+    command_input: Any, 
     timeout: int = 10
 ) -> Dict[str, Any]:
     """
@@ -218,8 +236,8 @@ async def send_command_and_wait_for_response(
 
     Args:
         client_id: The ID of the client to send the command to.
-        command: The command topic/name.
-        payload: The data to send with the command.
+        command_name: The command name.
+        command_input: The data to send with the command.
         timeout: The time in seconds to wait for a response.
 
     Returns:
@@ -240,17 +258,16 @@ async def send_command_and_wait_for_response(
     manager.pending_async_requests[correlation_id] = future
 
     message = WebSocketMessage(
-        id=str(uuid.uuid4()),
+        id=command_name,
         timestamp=datetime.now().isoformat(),
-        topic=command,
-        message="command",
-        payload=payload,
+        topic="call_command",
+        message= command_input,
         correlation_id=correlation_id
     )
 
     try:
         manager.send_message_to_client(client_id, message)
-        print(f"INFO: Sent command '{command}' to client {client_id} with correlation_id: {correlation_id}")
+        print(f"INFO: Sent command '{command_input}' to client {client_id} with correlation_id: {correlation_id}")
         
         # Wait for the future to be resolved by process_incoming_message
         response = await asyncio.wait_for(future, timeout=timeout)
