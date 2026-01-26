@@ -1,17 +1,17 @@
 const commands = [
     new ExtensionCommand(
-        "ask",
-        "Ask a question to the model",
-        `{ "question": "string" }`,
-        "RAGatouille",
-        "RAG"
+        "insert_content",
+        "Insert HTLP into document",
+        `{ "content" : "string", "position" : "200"  }`,
+        "OnlyOffice DocX Editor",
+        ""
     ),
     new ExtensionCommand(
-        "get_context",
-        "Get context from the document",
+        "get_content",
+        "Get content from the document in HTML",
         `{}`,
-        "RAGatouille",
-        "RAG"
+        "OnlyOffice DocX Editor",
+        ""
     )
 ];
 

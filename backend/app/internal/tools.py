@@ -1,7 +1,10 @@
 import chromadb
+from typing import List
 from app.crud.crud_collection_content import query_collection as crud_query_collection
 from app.database import get_db_connection
 from app.crud.crud_collection import get_enabled_collections_for_mcp
+from app.internal.extension_manager import ExtensionManager
+from app.schemas.mcp import ExtensionTool
 
 def register_tools(mcp_server, mcp_manager):
     """
@@ -23,6 +26,18 @@ def register_tools(mcp_server, mcp_manager):
         with get_db_connection() as db:
             collections = get_enabled_collections_for_mcp(db)
         return collections
+
+    @mcp_server.tool()
+    def extension_tool_list() -> List[dict]:
+        """Returns a list of all connected extension tools and their supported commands."""
+        if not mcp_manager.is_enabled():
+            return []
+        
+        manager = ExtensionManager()
+        extension_tools = manager.get_registered_extension_tools()
+        
+        # Convert Pydantic models to dictionaries
+        return [tool.model_dump() for tool in extension_tools]
 
     @mcp_server.tool()
     def query_collection(collection_name: str, query_text: str, n_results: int = 10) -> dict:
