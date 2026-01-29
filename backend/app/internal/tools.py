@@ -1,5 +1,6 @@
 import chromadb
 from typing import List
+import asyncio
 from app.crud.crud_collection_content import query_collection as crud_query_collection
 from app.database import get_db_connection
 from app.crud.crud_collection import get_enabled_collections_for_mcp
@@ -38,6 +39,31 @@ def register_tools(mcp_server, mcp_manager):
         
         # Convert Pydantic models to dictionaries
         return [tool.model_dump() for tool in extension_tools]
+
+    @mcp_server.tool()
+    async def call_extension_tool(id: str, name: str, input: dict) -> dict:
+        """
+        Calls a command on a connected extension tool.
+        - id: The ID of the extension to call.
+        - name: The name of the command to invoke.
+        - input: A dictionary with the input parameters for the command.
+        """
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+
+        if not id or not name or input is None:
+            return {"status": "error", "message": "Missing required parameters: id, name, or input."}
+
+        manager = ExtensionManager()
+        try:
+            response = await manager.send_command_and_wait_for_response(id, name, input, timeout=10)
+            return response
+        except ConnectionError as e:
+            return {"status": "error", "message": str(e)}
+        except asyncio.TimeoutError:
+            return {"status": "error", "message": f"Command '{name}' on extension '{id}' timed out after 10 seconds."}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     @mcp_server.tool()
     def query_collection(collection_name: str, query_text: str, n_results: int = 10) -> dict:
