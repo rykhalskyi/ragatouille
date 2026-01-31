@@ -105,13 +105,11 @@ export { Editor };
 
     window.Asc.plugin.init = async function()
     {
-        console.log('begin');
         try {
             const fileName = await Editor.callCommand(function() {
                 // This code runs in the editor's context
                 return Api.GetFullName();
             });
-            console.log("Successfully got file name:", fileName);
             // You can now use the fileName variable, for example:
             // Asc.scope.fileName = fileName; 
             // Or display it in your plugin's UI
@@ -119,8 +117,6 @@ export { Editor };
         } catch (error) {
             console.error("Error getting file name on init:", error);
         }
-        console.log('end');
-        // Signal that the plugin API is ready.
         pluginReadyResolver();
     };
 
