@@ -7,7 +7,7 @@ class InsertContentCommand extends ExtensionCommand {
         super(
             "insert_content",
             "Insert HTML into document",
-            `{ "content" : "string", "position" : "200" }`,
+            `{ "content" : "string" }`,
             "OnlyOffice DocX Editor",
             ""
         );
@@ -15,7 +15,7 @@ class InsertContentCommand extends ExtensionCommand {
 
     async do(commandArg) {
         try {
-            const { content, position } = commandArg;
+            const { content } = commandArg;
             await Editor.callCommand(function() {
                 const oDocument = Api.GetDocument();
                 const oParagraph = Api.CreateParagraph();
