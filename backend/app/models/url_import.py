@@ -45,7 +45,7 @@ class UrlImport(ImportBase):
         
         max_depth = context.settings.get_setting_int(SettingsName.CRAWL_DEPTH, 1)
             
-        pages = simple_crawler.simple_crawl(file_name, cancel_event, max_depth=max_depth)
+        pages = simple_crawler.simple_crawl(file_name, cancel_event, max_depth=max_depth, filter_regex=import_params.settings.filter)
 
         if pages == None:
              message_hub.send_message(collection_id, MessageType.LOG, f"NOTHING imported from {file_name}. Parsed no pages.")
@@ -133,7 +133,7 @@ class UrlImport(ImportBase):
         
         max_depth = context.settings.get_setting_int(SettingsName.CRAWL_DEPTH, 1)
             
-        pages = simple_crawler.simple_crawl(url, cancel_event, max_depth=max_depth)
+        pages = simple_crawler.simple_crawl(url, cancel_event, max_depth=max_depth, filter_regex=context.parameters.settings.filter)
 
         if pages == None:
              context.messageHub.send_message(collection_id, MessageType.LOG, f"NOTHING imported from {url}. Parsed no pages.")

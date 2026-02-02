@@ -22,7 +22,7 @@ class TestUrlImport(unittest.TestCase):
         asyncio.run(run_test())
 
         # Assert
-        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=2)
+        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=2, filter_regex=unittest.mock.ANY)
 
     @patch('app.models.url_import.simple_crawler.simple_crawl')
     def test_import_data_with_invalid_crawl_depth(self, mock_simple_crawl):
@@ -39,7 +39,7 @@ class TestUrlImport(unittest.TestCase):
         asyncio.run(run_test())
 
         # Assert
-        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=1)
+        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=1, filter_regex=unittest.mock.ANY)
 
     @patch('app.models.url_import.simple_crawler.simple_crawl')
     def test_import_data_with_missing_crawl_depth(self, mock_simple_crawl):
@@ -56,7 +56,7 @@ class TestUrlImport(unittest.TestCase):
         asyncio.run(run_test())
 
         # Assert
-        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=1)
+        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=1, filter_regex=unittest.mock.ANY)
 
     @patch('app.models.url_import.simple_crawler.simple_crawl')
     def test_step_1_with_valid_crawl_depth(self, mock_simple_crawl):
@@ -73,7 +73,7 @@ class TestUrlImport(unittest.TestCase):
         asyncio.run(run_test())
 
         # Assert
-        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=3)
+        mock_simple_crawl.assert_called_with('http://example.com', cancel_event, max_depth=3, filter_regex=unittest.mock.ANY)
 
     def _create_mock_context(self, crawl_depth_value, two_step_import='False'):
         mock_settings_manager = MagicMock()

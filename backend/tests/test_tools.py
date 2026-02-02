@@ -31,12 +31,12 @@ class TestCallExtensionTool:
     @patch('app.internal.tools.ExtensionManager')
     async def test_call_extension_tool_success(self, MockExtensionManager, captured_tools):
         # Arrange
-        call_extension_tool_func = captured_tools['call_extension_tool']
+        call_extension_func = captured_tools['call_extension']
         mock_manager_instance = MockExtensionManager.return_value
         mock_manager_instance.send_command_and_wait_for_response = AsyncMock(return_value={"status": "success", "data": "result"})
 
         # Act
-        result = await call_extension_tool_func(id="ext_id", name="command_name", input={"key": "value"})
+        result = await call_extension_func(id="ext_id", name="command_name", input={"key": "value"})
 
         # Assert
         assert result == {"status": "success", "data": "result"}
@@ -45,39 +45,39 @@ class TestCallExtensionTool:
         )
 
     @patch('app.internal.tools.ExtensionManager')
-    async def test_call_extension_tool_connection_error(self, MockExtensionManager, captured_tools):
+    async def test_call_extension_connection_error(self, MockExtensionManager, captured_tools):
         # Arrange
-        call_extension_tool_func = captured_tools['call_extension_tool']
+        call_extension_func = captured_tools['call_extension']
         mock_manager_instance = MockExtensionManager.return_value
         mock_manager_instance.send_command_and_wait_for_response.side_effect = ConnectionError("Extension not found")
         
         # Act
-        result = await call_extension_tool_func(id="ext_id", name="command_name", input={"key": "value"})
+        result = await call_extension_func(id="ext_id", name="command_name", input={"key": "value"})
 
         # Assert
         assert result == {"status": "error", "message": "Extension not found"}
 
     @patch('app.internal.tools.ExtensionManager')
-    async def test_call_extension_tool_timeout_error(self, MockExtensionManager, captured_tools):
+    async def test_call_extension_timeout_error(self, MockExtensionManager, captured_tools):
         # Arrange
-        call_extension_tool_func = captured_tools['call_extension_tool']
+        call_extension_func = captured_tools['call_extension']
         mock_manager_instance = MockExtensionManager.return_value
         mock_manager_instance.send_command_and_wait_for_response.side_effect = asyncio.TimeoutError
         
         # Act
-        result = await call_extension_tool_func(id="ext_id", name="command_name", input={"key": "value"})
+        result = await call_extension_func(id="ext_id", name="command_name", input={"key": "value"})
 
         # Assert
         assert result == {"status": "error", "message": "Command 'command_name' on extension 'ext_id' timed out after 10 seconds."}
 
-    async def test_call_extension_tool_missing_params(self, captured_tools):
+    async def test_call_extension_missing_params(self, captured_tools):
         # Arrange
-        call_extension_tool_func = captured_tools['call_extension_tool']
+        call_extension_func = captured_tools['call_extension']
         
         # Act
-        result_id = await call_extension_tool_func(id=None, name="command_name", input={"key": "value"})
-        result_name = await call_extension_tool_func(id="ext_id", name=None, input={"key": "value"})
-        result_input = await call_extension_tool_func(id="ext_id", name="command_name", input=None)
+        result_id = await call_extension_func(id=None, name="command_name", input={"key": "value"})
+        result_name = await call_extension_func(id="ext_id", name=None, input={"key": "value"})
+        result_input = await call_extension_func(id="ext_id", name="command_name", input=None)
 
         # Assert
         message = {"status": "error", "message": "Missing required parameters: id, name, or input."}
@@ -85,7 +85,7 @@ class TestCallExtensionTool:
         assert result_name == message
         assert result_input == message
         
-    async def test_call_extension_tool_mcp_disabled(self, captured_tools, mcp_manager):
+    async def test_call_extension_mcp_disabled(self, captured_tools, mcp_manager):
         # Arrange
         mcp_manager.is_enabled.return_value = False
         # We need to re-register the tools to capture the correct state
@@ -100,10 +100,10 @@ class TestCallExtensionTool:
 
         mock_server = MockMcpServer()
         register_tools(mock_server, mcp_manager)
-        call_extension_tool_func = tools['call_extension_tool']
+        call_extension_func = tools['call_extension']
 
         # Act
-        result = await call_extension_tool_func(id="ext_id", name="command_name", input={"key": "value"})
+        result = await call_extension_func(id="ext_id", name="command_name", input={"key": "value"})
         
         # Assert
         assert result == {"status": "error", "message": "MCP server is disabled."}

@@ -4,13 +4,22 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from collections import deque
 import trafilatura
+import re
 
-def simple_crawl(start_url, cancel_event: Event, max_depth=1):
+def simple_crawl(start_url, cancel_event: Event, max_depth=1, filter_regex: str | None = None):
     visited = set()
     queue = deque([(start_url, 0)])
     domain = urlparse(start_url).netloc
 
     results = []   # ← list of {url, text}
+
+    compiled_regex = None
+    if filter_regex:
+        try:
+            compiled_regex = re.compile(filter_regex)
+        except re.error:
+            # Invalid regex, ignore it
+            pass
 
     while queue:
         if cancel_event.is_set():
@@ -18,6 +27,9 @@ def simple_crawl(start_url, cancel_event: Event, max_depth=1):
 
         url, depth = queue.popleft()
         if url in visited or depth > max_depth:
+            continue
+
+        if compiled_regex and not compiled_regex.match(url):
             continue
 
         visited.add(url)

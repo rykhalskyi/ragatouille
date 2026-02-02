@@ -7,6 +7,7 @@ class FileImportSettings(BaseModel):
     chunk_overlap: int
     no_chunks: bool
     chunk_type: Optional[ChunkType] = ChunkType.DEFAULT
+    filter: Optional[str] = None
 
 class UrlImportSettings(FileImportSettings):
     url: str
