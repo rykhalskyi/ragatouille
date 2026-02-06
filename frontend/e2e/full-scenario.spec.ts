@@ -113,6 +113,64 @@ test.describe('Full E2E Scenario - Normal Import', () => {
       await page.getByRole('button', { name: 'Close' }).click();
     });
 
+    await test.step('Import URL with filtering to "Dracula" collection', async () => {
+      await page.goto('http://localhost:4200/');
+      await page.getByText('Dracula').click();
+      await expect(page).toHaveURL(/\/collection\/.*/);
+
+      await page.getByTestId('import-select').click();
+      await page.getByRole('option', { name: 'URL' }).click();
+      await page.keyboard.press('Escape'); // Close dropdown
+
+      await page.getByTestId('import-button').click();
+      await expect(page.getByRole('heading', { name: /Import from URL to .*/ })).toBeVisible();
+
+      // Enable URL Filtering
+      await page.getByLabel('Enable URL Filtering').check();
+      await expect(page.getByLabel('URL Filter Regex')).toBeEnabled();
+
+      // Enter an invalid regex first to test validation
+      await page.getByLabel('URL Filter Regex').fill('[abc');
+      await expect(page.getByText('Invalid regular expression format.')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Import' })).toBeDisabled();
+
+      // Enter a valid regex
+      const validRegex = '.*\\.html$';
+      await page.getByLabel('URL Filter Regex').fill(validRegex);
+      await expect(page.getByText('Invalid regular expression format.')).not.toBeVisible();
+      await expect(page.getByRole('button', { name: 'Import' })).toBeEnabled();
+
+
+      // Fill other form fields
+      await page.getByLabel('URL').fill('https://www.example.com/some/path/doc.html');
+      await page.getByLabel('Model').fill('test-model-for-url-filter');
+      await page.getByLabel('Chunk Size').fill('250');
+      await page.getByLabel('Chunk Overlap').fill('25');
+      await page.getByLabel('No chunks').uncheck();
+
+
+      // Intercept the request
+      const requestPromise = page.waitForRequest(request =>
+        request.url().includes('/import/url') && request.method() === 'POST'
+      );
+
+      await page.getByRole('button', { name: 'Import' }).click();
+
+      const request = await requestPromise;
+      const requestBody = JSON.parse(request.postData() || '{}');
+
+      // Assertions on the request payload
+      expect(requestBody.url).toBe('https://www.example.com/some/path/doc.html');
+      expect(requestBody.model).toBe('test-model-for-url-filter');
+      expect(requestBody.settings.chunk_size).toBe(250);
+      expect(requestBody.settings.chunk_overlap).toBe(25);
+      expect(requestBody.settings.no_chunks).toBe(false);
+      expect(requestBody.settings.urlFilterRegex).toBe(validRegex);
+
+      await expect(page.getByText('Import completed')).toBeVisible({ timeout: 120000 });
+      await page.getByRole('button', { name: 'Close' }).click();
+    });
+
     await test.step('Enable and disable "Dracula" on MCP', async () => {
         const draculaRow = page.locator('tr', { hasText: 'Dracula' });
         
