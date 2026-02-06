@@ -51,14 +51,16 @@ def test_get_collection_chunks_not_found(mock_persistent_client):
     with pytest.raises(ValueError, match="Collection 'test_collection' not found"):
         get_collection_chunks("test_collection", 1, 10)
 
-@patch('app.crud.crud_collection_content.embedder')
+@patch('app.crud.crud_collection_content.get_embedder')
 @patch('chromadb.PersistentClient')
-def test_query_collection_success(mock_persistent_client, mock_embedder):
+def test_query_collection_success(mock_persistent_client, mock_get_embedder):
     """
     Test successful querying of a collection.
     """
     # Arrange
+    mock_embedder = MagicMock()
     mock_embedder.embed.return_value = [np.array([0.1, 0.2, 0.3])]
+    mock_get_embedder.return_value = mock_embedder
     
     mock_collection = MagicMock()
     mock_collection.query.return_value = {"results": "some_results"}
@@ -76,6 +78,7 @@ def test_query_collection_success(mock_persistent_client, mock_embedder):
     # Assert
     mock_persistent_client.assert_called_once_with(path="./chroma_data")
     mock_client_instance.get_collection.assert_called_once_with(name=collection_id)
+    mock_get_embedder.assert_called_once()
     mock_embedder.embed.assert_called_once_with([query_text])
     mock_collection.query.assert_called_once()
     

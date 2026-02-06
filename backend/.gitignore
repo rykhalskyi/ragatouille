@@ -213,3 +213,5 @@ chroma_data/
 chroma_db/
 test-text/
 ragatouille.db
+
+.fastembed/

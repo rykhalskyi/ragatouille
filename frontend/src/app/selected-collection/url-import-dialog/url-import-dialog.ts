@@ -1,14 +1,16 @@
 import { Component, Inject, OnInit, signal } from '@angular/core';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { FileImportSettings } from '../../client';
 import { MatInput } from '@angular/material/input';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 
 
+@UntilDestroy()
 @Component({
   selector: 'app-url-import-dialog',
   standalone: true,
@@ -50,7 +52,22 @@ export class UrlImportDialog implements OnInit {
       chunkSize: [this.data.settings.chunk_size, [Validators.required, Validators.min(1)]],
       chunkOverlap: [this.data.settings.chunk_overlap, [Validators.required, Validators.min(0)]],
       url: ['', Validators.required],
-      no_chunks: false
+      no_chunks: false,
+      filterEnabled: false,
+      urlFilterRegex: [{ value: "", disabled: true }]
+    });
+
+    this.importForm.get('filterEnabled')?.valueChanges.pipe(untilDestroyed(this)).subscribe(enabled => {
+      const urlFilterRegexControl = this.importForm.get('urlFilterRegex');
+      if (enabled) {
+        urlFilterRegexControl?.enable();
+        urlFilterRegexControl?.setValidators(Validators.required);
+      } else {
+        urlFilterRegexControl?.disable();
+        urlFilterRegexControl?.setValue("");
+        urlFilterRegexControl?.clearValidators();
+      }
+      urlFilterRegexControl?.updateValueAndValidity();
     });
 
     //if (this.data.saved)

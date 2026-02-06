@@ -66,7 +66,25 @@
       <div class="row3">
            <mat-checkbox formControlName="no_chunks">No chunks</mat-checkbox>
         </div>
+        <div class="row4-with-filter">
+      <mat-checkbox formControlName="filterEnabled" class="filter-checkbox">Enable URL Filtering</mat-checkbox>
+      <mat-form-field appearance="fill" class="url-filter-regex-input" >
+        <mat-label>URL Filter Regex</mat-label>
+        <input matInput formControlName="urlFilterRegex" placeholder="Enter regular expression">
+        @if (importForm.get('urlFilterRegex')?.hasError('invalidRegex') && importForm.get('urlFilterRegex')?.touched) {
+          <mat-error>
+            Invalid regular expression format.
+          </mat-error>
+        }
+        @if (importForm.get('urlFilterRegex')?.hasError('required') && importForm.get('urlFilterRegex')?.touched) {
+          <mat-error>
+            URL Filter Regex is required when enabled.
+          </mat-error>
+        }
+      </mat-form-field>
+    </div>
     </form>
+    
   </div>
   <div mat-dialog-actions>
     <button mat-button (click)="onNoClick()">Cancel</button>

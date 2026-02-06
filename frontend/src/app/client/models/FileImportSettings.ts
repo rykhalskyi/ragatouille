@@ -8,5 +8,6 @@ export type FileImportSettings = {
     chunk_overlap: number;
     no_chunks: boolean;
     chunk_type?: (ChunkType | null);
+    filter?: (string | null);
 };
 

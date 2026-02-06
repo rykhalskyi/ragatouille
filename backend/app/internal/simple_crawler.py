@@ -1,10 +1,12 @@
+from re import Pattern
 from threading import Event
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from collections import deque
+import trafilatura
 
-def simple_crawl(start_url, cancel_event: Event, max_depth=1):
+def simple_crawl(start_url, cancel_event: Event, regex: Pattern[str] | None, max_depth=1):
     visited = set()
     queue = deque([(start_url, 0)])
     domain = urlparse(start_url).netloc
@@ -32,8 +34,9 @@ def simple_crawl(start_url, cancel_event: Event, max_depth=1):
         soup = BeautifulSoup(response.text, "html.parser")
 
         # Extract text from the page
-        text = soup.get_text(" ", strip=True)
-        results.append({"url": url, "text": text})
+        text = trafilatura.extract(response.text)
+        if text:
+            results.append({"url": url, "text": text})
 
         # If already at max depth, don't collect more links
         if depth == max_depth:
@@ -50,7 +53,28 @@ def simple_crawl(start_url, cancel_event: Event, max_depth=1):
             # Only follow links inside same domain
             if parsed.netloc == domain:
                 link = link.split("#")[0]  # remove fragments
+
+                if regex and not regex.match(link):
+                    continue
+
                 if link not in visited:
                     queue.append((link, depth + 1))
+
+    return results
+
+
+def crawl_from_list(urls):
+    results = []
+    for url in urls:
+      
+        try:
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+        except Exception:
+            continue
+
+        text = trafilatura.extract(response.text)
+        if text:
+            results.append({"url": url, "text": text})
 
     return results

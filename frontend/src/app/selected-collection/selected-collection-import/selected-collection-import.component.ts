@@ -250,7 +250,8 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges{
         settings: {
           chunk_size: result.chunkSize,
           chunk_overlap: result.chunkOverlap,
-          no_chunks: result.no_chunks ?? result.noChunks
+          no_chunks: result.no_chunks ?? result.noChunks,
+          filter: result.urlFilterRegex
         }
       })
     };
@@ -258,6 +259,7 @@ export class SelectedCollectionImportComponent implements OnInit, OnChanges{
 
   private async handleUrlImport(result: any, selectedImportType: Import) {
     const formData = this.buildUrlFormData(selectedImportType, result);
+    console.log('form data', formData);
     try {
       if (this.twoStepImport()){
         await ImportService.importUrlStep1ImportUrlStep1CollectionIdPost(result.collectionId, result.url, formData);
@@ -287,16 +289,22 @@ openPreviewDialog() {
       return;
 }
   async handle2ndStepFileImport(result: any, selectedImportType: Import) {
+   
     const selectedFiles: string[] = result.selectedFiles || [];
     const formData = this.buildUrlFormData(selectedImportType, result);
     let importParams = JSON.parse(formData.import_params);
     importParams.settings.chunk_type = result.chunkType;
+   // importParams.settings.filter = false;
+   // importParams.settings.urlFilterRegex = "";
 
     try {
-      await ImportService.importFileStep2ImportStep2CollectionIdPost(result.collectionId, {
-        import_files_ids: selectedFiles,
-        import_params: JSON.stringify(importParams)
-      });
+      await ImportService.importFileStep2ImportStep2CollectionIdPost(
+        result.collectionId,
+        {
+          import_files_ids: JSON.stringify(selectedFiles),
+          import_params: JSON.stringify(importParams)
+        }
+      );
       console.log('File imported successfully');
     } catch (error) {
       console.error('Error importing Url:', error);

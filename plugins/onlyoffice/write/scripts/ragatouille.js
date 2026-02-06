@@ -1,4 +1,4 @@
-import { get_commands } from './commands.js';
+import { find_command, get_commands } from './commands.js';
 
 let client = null;
 let connected = false;
@@ -12,7 +12,7 @@ function connectClick() {
         client = new WebSocketClient('ws://localhost:8000/extensions/ws');
 
         client.onOpen = () => {
-            statusElement.textContent = 'Connected' + file_name;
+            statusElement.textContent = 'Connected';
             connectButton.textContent = 'Disconnect';
             connected = true;
 
@@ -41,6 +41,16 @@ function connectClick() {
                     console.log("Ping payload:", message.payload);
                     client.send(JSON.stringify({type: "pong", payload: message.timestamp}));
                     break;
+                case "call_command":
+                    const command = find_command(message.id);
+                    if (command !== undefined)
+                    {
+                      const result = await command.do(message.message);
+                      client.send(JSON.stringify({
+                        type: "command_response",
+                        correlation_id: message.correlation_id, 
+                        payload: result}))
+                    }
                 default:
                     console.warn("Unknown message type:", message.type);
             }
@@ -52,14 +62,6 @@ function connectClick() {
                 await isPluginReady;
                 const version = await Editor.callMethod("GetVersion");
                 console.log("Editor version:", version);
-
-                // You could also execute a command, for example, to insert text:
-                // await Editor.callCommand(function() {
-                //     var oDocument = Api.GetDocument();
-                //     var oParagraph = Api.CreateParagraph();
-                //     oParagraph.AddText("Received: " + event.data);
-                //     oDocument.InsertContent([oParagraph]);
-                // });
 
             } catch (error) {
                 console.error("Error calling API method from WebSocket handler:", error);
@@ -97,17 +99,17 @@ var Editor = {
     }
 };
 
+export { Editor };
+
 (function(window, undefined){
 
     window.Asc.plugin.init = async function()
     {
-        console.log('begin');
         try {
             const fileName = await Editor.callCommand(function() {
                 // This code runs in the editor's context
                 return Api.GetFullName();
             });
-            console.log("Successfully got file name:", fileName);
             // You can now use the fileName variable, for example:
             // Asc.scope.fileName = fileName; 
             // Or display it in your plugin's UI
@@ -115,8 +117,6 @@ var Editor = {
         } catch (error) {
             console.error("Error getting file name on init:", error);
         }
-        console.log('end');
-        // Signal that the plugin API is ready.
         pluginReadyResolver();
     };
 

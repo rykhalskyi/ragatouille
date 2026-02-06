@@ -164,8 +164,7 @@ class TestExtensionManager(unittest.TestCase):
         """Test the async request-reply pattern successfully returns a response."""
         import asyncio
         import threading
-        from app.internal.extension_manager import send_command_and_wait_for_response
-
+        
         client_id, client_queue = self.manager.register_client()
         
         def client_simulator():
@@ -192,10 +191,10 @@ class TestExtensionManager(unittest.TestCase):
 
         async def run_test():
             # 3. Main thread sends a command and awaits the response
-            response = await send_command_and_wait_for_response(
+            response = await self.manager.send_command_and_wait_for_response(
                 client_id=client_id,
                 command_name="test_command",
-                command_input={"data": "some_input"},
+                command_input='{"data": "some_input"}', # Changed to string
                 timeout=5
             )
             # 4. Assert the response is what the client sent
@@ -209,17 +208,16 @@ class TestExtensionManager(unittest.TestCase):
     def test_send_command_and_wait_for_response_timeout(self):
         """Test that the async request-reply pattern raises a TimeoutError."""
         import asyncio
-        from app.internal.extension_manager import send_command_and_wait_for_response
 
         client_id, client_queue = self.manager.register_client()
 
         async def run_test():
             # We expect a TimeoutError because the client will not send a response
-            with self.assertRaises(asyncio.TimeoutError):
-                await send_command_and_wait_for_response(
+            with self.assertRaises(TimeoutError):
+                await self.manager.send_command_and_wait_for_response(
                     client_id=client_id,
                     command_name="test_command",
-                    command_input={"data": "some_input"},
+                    command_input='{"data": "some_input"}', # Changed to string
                     timeout=0.1  # Use a short timeout
                 )
             
