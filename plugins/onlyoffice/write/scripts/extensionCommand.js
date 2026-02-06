@@ -30,4 +30,7 @@ class ExtensionCommand {
   }
 }
 
-export { ExtensionCommand };
+// For browser compatibility, attach to window if not using modules
+if (typeof window !== 'undefined') {
+  window.ExtensionCommand = ExtensionCommand;
+}

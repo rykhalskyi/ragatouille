@@ -5,6 +5,7 @@ let connected = false;
 let file_name = "";
 
 function connectClick() {
+    console.log('CONNECT CLICK');
     const statusElement = document.getElementById('status');
     const connectButton = document.querySelector('button');
 
@@ -99,14 +100,19 @@ var Editor = {
     }
 };
 
-export { Editor };
+// export { Editor };
+
+// Attach Editor to window so it is globally accessible
+window.Editor = Editor;
 
 (function(window, undefined){
-
+  console.log('START', window.Editor);
     window.Asc.plugin.init = async function()
     {
+        console.log('INIT');
         try {
             const fileName = await Editor.callCommand(function() {
+
                 // This code runs in the editor's context
                 return Api.GetFullName();
             });
@@ -114,6 +120,7 @@ export { Editor };
             // Asc.scope.fileName = fileName; 
             // Or display it in your plugin's UI
             file_name = fileName;
+            console.log('FILE NAME',file_name);
         } catch (error) {
             console.error("Error getting file name on init:", error);
         }

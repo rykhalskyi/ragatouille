@@ -1,5 +1,7 @@
-import { ExtensionCommand } from './extensionCommand.js';
-import { Editor } from './ragatouille.js';
+// import { ExtensionCommand } from './extensionCommand.js';
+const ExtensionCommand = window.ExtensionCommand;
+// import { Editor } from './ragatouille.js';
+const Editor = window.Editor;
 
 // Define InsertContentCommand class extending ExtensionCommand
 class InsertContentCommand extends ExtensionCommand {
@@ -44,7 +46,7 @@ class GetContentCommand extends ExtensionCommand {
 
        async do(commandArg) {
         try {           
-            return await Editor.callCommand(function() {
+            return await window.Editor.callCommand(function() {
                 const oDocument = Api.GetDocument();
                 var allText = oDocument.GetText();
                 return { success: true, content: allText };
@@ -56,12 +58,68 @@ class GetContentCommand extends ExtensionCommand {
     }
 }
 
+class RunCodeCommand extends ExtensionCommand{
+    constructor(){
+        super(
+            "run_code",
+            "Runs your office-api code in Only Office runtime. container is:"+  ' + JSON.stringify(code) ' +
+                'try {' +
+                '  const __result = (function() {' +
+                '     + userCode + ' +
+                '  })();' +
+                '  return { success: true, result: __result === undefined ? null : __result };' +
+                '} catch(e) {' +
+                '  return { success: false, message: e && e.message ? e.message : String(e) };' +
+                '}'+ 'Example of user code: return Api.GetFullName();',
+            `{code: "userCode"}`,
+            "OnlyOffice DocX Editor",
+            ""
+        );
+    }
+
+    async do(commandArg) {
+        try {
+            console.log('RUN CODE', commandArg);
+
+            if (typeof commandArg === "string") {
+               commandArg = JSON.parse(commandArg);
+            }
+
+            const code = commandArg && commandArg.code;
+            if (!code) {
+                return { success: false, message: "No code provided" };
+            }
+
+            // Build a function that will run inside the editor context.
+            // We serialize the user code as a string and eval it there, capturing result/errors.
+            const func = new Function(
+                'try {\n' +
+                '  const __result = (function() {\n' +
+                '    ' + code + '\n' +
+                '  })();\n' +
+                '  return { success: true, result: __result === undefined ? null : __result };\n' +
+                '} catch(e) {\n' +
+                '  return { success: false, message: e && e.message ? e.message : String(e) };\n' +
+                '}'
+            );
+
+            console.log('RUN CODE FUNC', func);
+            const result = await window.Editor.callCommand(func);
+            return result;
+        } catch (error) {
+            console.error("Error running code:", error);
+            return { success: false, message: error && error.message ? error.message : String(error) };
+        }
+    }
+}
+
 // Create instances of the commands
 const insertContentCmd = new InsertContentCommand();
 const getContentCmd = new GetContentCommand();
+const runCodeCommand = new RunCodeCommand();
 
 // Make a list and add these commands
-const commands = [insertContentCmd, getContentCmd];
+const commands = [insertContentCmd, getContentCmd, runCodeCommand];
 
 export function get_commands(entityName){
     for (const item of commands)
