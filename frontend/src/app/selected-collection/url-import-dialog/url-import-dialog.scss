@@ -23,6 +23,19 @@
     grid-row: 3;
   }
 
+  .row4-with-filter {
+    grid-row: 4;
+    display: flex;
+    align-items: center;
+    gap: 16px; // Adjust gap as needed
+  }
+
+  .url-filter-regex-input {
+    flex-grow: 1; // Allow the input to take available space
+    margin-left: 20px;
+    width: 400px;
+  }
+
   .parameters{
     display: flex;
     flex-direction: row;

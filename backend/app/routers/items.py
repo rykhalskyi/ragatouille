@@ -1,6 +1,6 @@
 import chromadb
 from fastapi import APIRouter, HTTPException
-from fastembed import TextEmbedding
+from app.internal.embedding_manager import get_embedder
 import numpy as np
 from pydantic import BaseModel
 
@@ -27,7 +27,7 @@ def query_database(collection_id: str, payload: QueryRequest):
     try:
         client = chromadb.PersistentClient(path="./chroma_data")
         collection = client.get_collection(name=collection_id)
-        embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+        embedder = get_embedder()
 
         query_emb = np.array(list(embedder.embed([payload.query])))
 

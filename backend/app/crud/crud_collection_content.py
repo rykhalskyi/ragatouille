@@ -1,7 +1,6 @@
 import chromadb
-from fastembed import TextEmbedding
+from app.internal.embedding_manager import get_embedder
 
-embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
 
 def get_collection_chunks(collection_id: str, page: int, page_size: int):
     """
@@ -44,6 +43,7 @@ def query_collection(collection_id: str, query_text: str, n_results: int = 10):
         client = chromadb.PersistentClient(path="./chroma_data")
         collection = client.get_collection(name=collection_id)
         
+        embedder = get_embedder()
         query_embedding = list(embedder.embed([query_text]))[0].tolist()
 
         results = collection.query(

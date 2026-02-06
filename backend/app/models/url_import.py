@@ -8,6 +8,7 @@ import numpy as np
 from app.crud.crud_files import create_file, delete_file, get_files_for_collection
 from app.internal import simple_crawler
 from app.internal.chunker import Chunker
+from app.internal.embedding_manager import get_embedder
 from app.internal.message_hub import MessageHub
 from app.internal.temp_file_helper import TempFileHelper
 from app.models.import_context import ImportContext
@@ -15,6 +16,8 @@ from app.models.imports import ImportBase
 from app.models.messages import MessageType
 from app.schemas.imports import FileImportSettings, Import
 from app.schemas.setting import SettingsName
+
+import re
 
 
 class UrlImport(ImportBase):
@@ -44,8 +47,16 @@ class UrlImport(ImportBase):
         message_hub.send_message(collection_id, MessageType.INFO, f"Crawling and parsing {file_name} ....")
         
         max_depth = context.settings.get_setting_int(SettingsName.CRAWL_DEPTH, 1)
+
+        compiled_regex = None
+        if context.parameters.settings.filter:
+            try:
+                compiled_regex = re.compile(context.parameters.settings.filter)
+            except re.error:
+                # Invalid regex, ignore it
+                pass
             
-        pages = simple_crawler.simple_crawl(file_name, cancel_event, max_depth=max_depth, filter_regex=import_params.settings.filter)
+        pages = simple_crawler.simple_crawl(file_name, cancel_event, compiled_regex, max_depth=max_depth)
 
         if pages == None:
              message_hub.send_message(collection_id, MessageType.LOG, f"NOTHING imported from {file_name}. Parsed no pages.")
@@ -58,6 +69,9 @@ class UrlImport(ImportBase):
                  message_hub.send_message(collection_id, MessageType.UNLOCK, f"Import of {file_name} was cancelled")
                  message_hub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import from {file_name} chunks of length {import_params.settings.chunk_size}, overlap {import_params.settings.chunk_overlap}.") 
                  return
+            
+            if compiled_regex and not compiled_regex.match(page["url"]):
+                continue
             
             await self.__import_data_internal(collection_id, page["url"], page["text"], import_params, message_hub,cancel_event )
 
@@ -74,7 +88,7 @@ class UrlImport(ImportBase):
 
             message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
 
-            embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+            embedder = get_embedder()
             embeddings = np.array(list(embedder.embed(chunks)))
             message_hub.send_message(collection_id, MessageType.INFO, "Embeddings created. Saving to Database....")
 
@@ -132,8 +146,16 @@ class UrlImport(ImportBase):
         context.messageHub.send_message(collection_id, MessageType.INFO, f"Crawling and parsing {url} ....")
         
         max_depth = context.settings.get_setting_int(SettingsName.CRAWL_DEPTH, 1)
-            
-        pages = simple_crawler.simple_crawl(url, cancel_event, max_depth=max_depth, filter_regex=context.parameters.settings.filter)
+
+        compiled_regex = None
+        if context.parameters.settings.filter:
+            try:
+                compiled_regex = re.compile(context.parameters.settings.filter)
+            except re.error:
+                # Invalid regex, ignore it
+                pass    
+        
+        pages = simple_crawler.simple_crawl(url, cancel_event, compiled_regex, max_depth=max_depth)
 
         if pages == None:
              context.messageHub.send_message(collection_id, MessageType.LOG, f"NOTHING imported from {url}. Parsed no pages.")
@@ -147,9 +169,26 @@ class UrlImport(ImportBase):
                  context.messageHub.send_message(collection_id, MessageType.LOG, f"CANCELLED Import from {url} chunks of length {context.parameters.settings.chunk_size}, overlap {context.parameters.settings.chunk_overlap}.") 
                  return
             
+            if compiled_regex and not compiled_regex.match(page["url"]):
+                continue
+            
+            print('Match', page["url"])
             tmp_file = TempFileHelper.save_temp_str(page["text"], page["url"])
             create_file(context.db, collection_id, tmp_file, page["url"])
             
             
         context.messageHub.send_message(collection_id, MessageType.UNLOCK, f"Import of {url} completed.")
 
+
+def read_file_lines(file_path: str) -> list[str]:
+    """
+    Read a text file and return a list of strings, one per line.
+    
+    Args:
+        file_path: Path to the text file
+        
+    Returns:
+        List of strings, each representing one line from the file
+    """
+    with open(file_path, 'r') as file:
+        return [line.rstrip('\n') for line in file]

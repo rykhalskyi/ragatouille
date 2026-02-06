@@ -9,7 +9,6 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Body_import_file_import__collection_id__post } from './models/Body_import_file_import__collection_id__post';
 export type { Body_import_file_step_1_import_step1__collection_id__post } from './models/Body_import_file_step_1_import_step1__collection_id__post';
-export type { Body_import_file_step_2_import_step2__collection_id__post } from './models/Body_import_file_step_2_import_step2__collection_id__post';
 export type { Body_import_url_import_url__colletion_id__post } from './models/Body_import_url_import_url__colletion_id__post';
 export type { Body_import_url_step_1_import_url_step1__collection_id__post } from './models/Body_import_url_step_1_import_url_step1__collection_id__post';
 export type { ChunkPreviewRequest } from './models/ChunkPreviewRequest';
@@ -25,6 +24,7 @@ export type { File } from './models/File';
 export type { FileImportSettings } from './models/FileImportSettings';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { Import } from './models/Import';
+export type { ImportFileStep2In } from './models/ImportFileStep2In';
 export { ImportType } from './models/ImportType';
 export type { MCPEnabledRequest } from './models/MCPEnabledRequest';
 export type { Message } from './models/Message';

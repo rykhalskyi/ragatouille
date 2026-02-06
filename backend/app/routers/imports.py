@@ -14,7 +14,7 @@ from app.crud import crud_collection
 from app.database import get_db_connection
 from app.models.url_import import UrlImport
 from app.schemas.collection import ImportType
-from app.schemas.imports import Import
+from app.schemas.imports import Import, ImportFileStep2In
 from app.schemas.setting import SettingsName
 from app.internal.chunker import ChunkType
 
@@ -121,11 +121,11 @@ async def import_file_step_1(collection_id: str, import_params: str = Form(...),
         content={"message": str(e)}) 
     
 @router.post("/step2/{collection_id}")
-async def import_file_step_2(collection_id: str, import_files_ids: List[str], import_params: str = Form(...),  db: Connection = Depends(get_db_connection), task_dispatcher = Depends(get_task_dispatcher), message_hub:MessageHub = Depends(get_message_hub)):
+async def import_file_step_2(collection_id: str, data: ImportFileStep2In,  db: Connection = Depends(get_db_connection), task_dispatcher = Depends(get_task_dispatcher), message_hub:MessageHub = Depends(get_message_hub)):
     try:
         
         task_name = f"Importing to {collection_id} step 2"
-        import_params_model = Import.model_validate_json(import_params)
+        import_params_model = Import.model_validate_json(data.import_params)
 
         import_context = ImportContext(db, message_hub, import_params_model)
 
@@ -136,7 +136,7 @@ async def import_file_step_2(collection_id: str, import_files_ids: List[str], im
         if (collection == None):
             return {"message": "Collection not found."}
                
-        task_dispatcher.add_task(collection_id, task_name, FileImport().step_2, import_context, import_files_ids)
+        task_dispatcher.add_task(collection_id, task_name, FileImport().step_2, import_context, data.import_files_ids)
         
         if collection and collection.import_type == ImportType.NONE:
             crud_collection.update_collection_import_type(db, collection_id, import_params_model)

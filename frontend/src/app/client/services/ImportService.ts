@@ -4,10 +4,10 @@
 /* eslint-disable */
 import type { Body_import_file_import__collection_id__post } from '../models/Body_import_file_import__collection_id__post';
 import type { Body_import_file_step_1_import_step1__collection_id__post } from '../models/Body_import_file_step_1_import_step1__collection_id__post';
-import type { Body_import_file_step_2_import_step2__collection_id__post } from '../models/Body_import_file_step_2_import_step2__collection_id__post';
 import type { Body_import_url_import_url__colletion_id__post } from '../models/Body_import_url_import_url__colletion_id__post';
 import type { Body_import_url_step_1_import_url_step1__collection_id__post } from '../models/Body_import_url_step_1_import_url_step1__collection_id__post';
 import type { Import } from '../models/Import';
+import type { ImportFileStep2In } from '../models/ImportFileStep2In';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -112,13 +112,13 @@ export class ImportService {
     /**
      * Import File Step 2
      * @param collectionId
-     * @param formData
+     * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
      */
     public static importFileStep2ImportStep2CollectionIdPost(
         collectionId: string,
-        formData: Body_import_file_step_2_import_step2__collection_id__post,
+        requestBody: ImportFileStep2In,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
@@ -126,8 +126,8 @@ export class ImportService {
             path: {
                 'collection_id': collectionId,
             },
-            formData: formData,
-            mediaType: 'application/x-www-form-urlencoded',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },

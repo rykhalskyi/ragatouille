@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import os
 from threading import Event
 from typing import List
-from fastembed import TextEmbedding
+from app.internal.embedding_manager import get_embedder
 import chromadb
 import time
 import numpy as np
@@ -65,7 +65,7 @@ class FileImport(ImportBase):
         """Embed chunks and store them in ChromaDB with batching and cancellation support."""
         message_hub.send_message(collection_id, MessageType.INFO, f"Created {len(chunks)} chunks. Embedding....")
 
-        embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+        embedder = get_embedder()
         embeddings = np.array(list(embedder.embed(chunks)))
 
         if self.check_cancelled(collection_id, file_name, message_hub, cancel_event):
