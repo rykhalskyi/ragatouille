@@ -18,6 +18,7 @@ RAGatouille is a locally deployable solution designed to empower users with thei
 * **API-driven backend:** Robust and extensible API for programmatic access.
 * **Docker/Podman compatibility:** Simple local deployment and management.
 * **MCP Server:** Acces from any AI agent
+* **OnlyOffice Plugin:** Seamlessly integrate with OnlyOffice text editor to read and modify DOCX documents within the RAGatouille system.
 
 ## Getting Started (Local Deployment)
 
@@ -55,6 +56,12 @@ To configure RAGatouille MCP, add the following to your configuration:
       "url": "http://localhost:4303/mcp"
     }
 ```
+
+## OnlyOffice Plugin
+
+The RAGatouille OnlyOffice Plugin enables direct integration with the OnlyOffice text editor. This allows users to:
+* Connect OnlyOffice with the RAGatouille RAG system.
+* Read and modify DOCX documents directly within the OnlyOffice editor, leveraging RAGatouille's knowledge base.
 
 ## Usage
 
