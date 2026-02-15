@@ -1,12 +1,12 @@
 import { ExtensionCommand } from "./extensionCommand.js";
 
 // Define InsertContentCommand class extending ExtensionCommand
-class HealthCheckCommand extends ExtensionCommand {
+class GetAccountListCommand extends ExtensionCommand {
     constructor() {
         super(
-            "health_check",
-            "Echoes the input string",
-            `{ "content" : "string" }`,
+            "account_list",
+            "Gets list of all accounts",
+            `{}`,
             "Mozilla Thunderbird",
             ""
         );
@@ -14,9 +14,8 @@ class HealthCheckCommand extends ExtensionCommand {
 
     async do(commandArg) {
         try {
-            const { content } = commandArg;
-            console.log('Health check', content);
-            return { success: true, message: content };
+            let accounts = (await messenger.accounts.list()).map(account => ({ id: account.id, name: account.name }));
+            return { success: true, message: accounts };
         } catch (error) {
             console.error("Error inserting content:", error);
             return { success: false, message: error.message };
@@ -28,11 +27,11 @@ class HealthCheckCommand extends ExtensionCommand {
 
 
 // Create instances of the commands
-const healthCheckCommand = new HealthCheckCommand();
+const getAccountListCommand = new GetAccountListCommand();
 
 
 // Make a list and add these commands
-const commands = [healthCheckCommand];
+const commands = [getAccountListCommand];
 
 export function get_commands(entityName){
     for (const item of commands)

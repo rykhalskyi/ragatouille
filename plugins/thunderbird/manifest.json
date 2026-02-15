@@ -19,5 +19,14 @@
         "64": "images/ragatouille_64.png",
         "32": "images/ragatouille_32.png",
         "16": "images/ragatouille_16.png"
-    }
+    },
+    "background": {
+        "page": "background/background.html"
+    },
+    "permissions": [
+        "messagesRead",
+        "accountsRead",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+    ]
 }
