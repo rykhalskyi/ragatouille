@@ -58,7 +58,7 @@ class ExtensionManager:
             topic="extension_connected",
             message=f"Extension client {client_id} connected."
         )
-        self.broadcast_message(notification_message)
+        self.send_message_to_client(client_id, notification_message)
 
         if self.messag_hub != None:
             self.messag_hub.send_message("extension", MessageType.INFO, f"ExtensionTool connected")

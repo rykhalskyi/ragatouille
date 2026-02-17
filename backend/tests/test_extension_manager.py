@@ -45,6 +45,8 @@ class TestExtensionManager(unittest.TestCase):
     def test_send_message_to_client(self):
         """Test sending a message to a specific client."""
         client_id, client_queue = self.manager.register_client()
+        # Consume the initial 'extension_connected' message
+        client_queue.get(timeout=1)
         message = WebSocketMessage(id=str(uuid.uuid4()), timestamp=datetime.now().isoformat(), topic="test", message="Hello")
         
         self.manager.send_message_to_client(client_id, message)
@@ -58,7 +60,9 @@ class TestExtensionManager(unittest.TestCase):
     def test_broadcast_message(self):
         """Test broadcasting a message to all clients."""
         client_id1, queue1 = self.manager.register_client()
+        queue1.get(timeout=1) # Consume the 'extension_connected' message
         client_id2, queue2 = self.manager.register_client()
+        queue2.get(timeout=1) # Consume the 'extension_connected' message
         
         message = WebSocketMessage(id=str(uuid.uuid4()), timestamp=datetime.now().isoformat(), topic="broadcast", message="Everyone")
 
@@ -75,6 +79,7 @@ class TestExtensionManager(unittest.TestCase):
     def test_process_incoming_ping(self):
         """Test processing a 'ping' message from a client."""
         client_id, client_queue = self.manager.register_client()
+        client_queue.get(timeout=1) # Consume the 'extension_connected' message
         ping_message_data = {"type": "ping", "payload": []}
 
         self.manager.process_incoming_message(client_id, ping_message_data)
@@ -88,6 +93,7 @@ class TestExtensionManager(unittest.TestCase):
     def test_process_incoming_ping_with_metadata(self):
         """Test processing a 'ping' message with metadata."""
         client_id, client_queue = self.manager.register_client()
+        client_queue.get(timeout=1) # Consume the 'extension_connected' message
         metadata = {
             "name": "Test App",
             "description": "A test extension",
@@ -105,6 +111,7 @@ class TestExtensionManager(unittest.TestCase):
     def test_process_unknown_message_type(self):
         """Test processing a message with an unknown type."""
         client_id, client_queue = self.manager.register_client()
+        client_queue.get(timeout=1) # Consume the 'extension_connected' message
         unknown_message_data = {"type": "unknown_type", "payload": {}}
 
         self.manager.process_incoming_message(client_id, unknown_message_data)
@@ -119,6 +126,7 @@ class TestExtensionManager(unittest.TestCase):
     def test_process_malformed_message(self):
         """Test processing a malformed message."""
         client_id, client_queue = self.manager.register_client()
+        client_queue.get(timeout=1) # Consume the 'extension_connected' message
         malformed_message_data = {"foo": "bar"} # Missing 'type' field
 
         self.manager.process_incoming_message(client_id, malformed_message_data)
@@ -167,6 +175,7 @@ class TestExtensionManager(unittest.TestCase):
         import threading
         
         client_id, client_queue = self.manager.register_client()
+        client_queue.get(timeout=1) # Consume the 'extension_connected' message
         
         def client_simulator():
             try:
