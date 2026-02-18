@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 class MCPEnabledRequest(BaseModel):
     enabled: bool
@@ -22,3 +22,13 @@ class ExtensionTool(BaseModel):
     application_name: str
     user_entity_name: str
     supported_commands: List[SupportedCommand]
+
+class CallToolRequest(BaseModel):
+    extension_id: str
+    command_name: str
+    arguments: Dict[str, Any]
+
+class CallToolResponse(BaseModel):
+    status: str
+    message: Optional[str] = None
+    result: Optional[Any] = None

@@ -12,7 +12,7 @@ Follow this steps:
 ## PHASE 1: Requirements Creation 
 
 1. Use gitHub mcp server.
-2. Check my projects and then check issues of ragatouille project.
+2. Check my projects (user: rykhalskyi) and then check issues of ragatool repository.
 3. Find issue ticket with {{args}} number
 4. If there's no ticket with {{args}} number on git hub notify user and return.
 
