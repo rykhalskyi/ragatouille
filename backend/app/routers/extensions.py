@@ -96,7 +96,7 @@ async def call_extension_tool(
             request.extension_id, 
             request.command_name, 
             request.arguments, 
-            timeout=10
+            timeout=20
         )
         return CallToolResponse(
             status="success",

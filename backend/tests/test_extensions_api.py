@@ -23,7 +23,7 @@ def test_call_tool_success(client):
         response = client.post("/extensions/call_tool", json={
             "extension_id": "ext1",
             "command_name": "cmd1",
-            "arguments": {"arg1": "val1"}
+            "arguments": "{\"arg1\": \"val1\"}"
         })
         
         assert response.status_code == 200
@@ -32,7 +32,7 @@ def test_call_tool_success(client):
         assert data["result"] == {"result": "ok"}
         
         mock_manager.send_command_and_wait_for_response.assert_called_once_with(
-            "ext1", "cmd1", {"arg1": "val1"}, timeout=10
+            "ext1", "cmd1", "{\"arg1\": \"val1\"}", timeout=20
         )
     finally:
         fastapi_app.dependency_overrides.clear()
@@ -47,7 +47,7 @@ def test_call_tool_not_found(client):
         response = client.post("/extensions/call_tool", json={
             "extension_id": "ext1",
             "command_name": "cmd1",
-            "arguments": {}
+            "arguments": "{}"
         })
         
         assert response.status_code == 404
@@ -66,7 +66,7 @@ def test_call_tool_timeout(client):
         response = client.post("/extensions/call_tool", json={
             "extension_id": "ext1",
             "command_name": "cmd1",
-            "arguments": {}
+            "arguments": "{}"
         })
         
         assert response.status_code == 408
@@ -84,7 +84,7 @@ def test_call_tool_internal_error(client):
         response = client.post("/extensions/call_tool", json={
             "extension_id": "ext1",
             "command_name": "cmd1",
-            "arguments": {}
+            "arguments": "{}"
         })
         
         assert response.status_code == 500
