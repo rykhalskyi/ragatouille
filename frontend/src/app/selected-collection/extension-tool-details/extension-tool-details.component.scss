@@ -1,1 +1,34 @@
-/* Add component-specific styles here */
+.details-container {
+  padding: 16px;
+  height: 100%;
+}
+
+.loading-state, .error-state, .no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tool-content {
+  max-width: 600px;
+}
+
+.commands-section {
+  margin-top: 24px;
+
+  h3 {
+    margin-bottom: 16px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+}
+
+mat-list-item {
+  border-bottom: 1px solid #f9f9f9;
+  &:last-child {
+    border-bottom: none;
+  }
+}

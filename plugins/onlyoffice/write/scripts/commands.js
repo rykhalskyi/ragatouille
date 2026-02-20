@@ -17,13 +17,25 @@ class InsertContentCommand extends ExtensionCommand {
 
     async do(commandArg) {
         try {
-            const { content } = commandArg;
-            await Editor.callCommand(function() {
+            let arg = commandArg;
+            if (typeof commandArg === "string")
+            {
+                arg = JSON.parse(arg);
+            }
+
+            const { content } = arg;
+            console.log('text to insert', arg, content);
+
+            const userCode = `
                 const oDocument = Api.GetDocument();
                 const oParagraph = Api.CreateParagraph();
-                oParagraph.AddText(content);
+                oParagraph.AddText('${content.replace(/'/g, "\\'")}');
                 oDocument.InsertContent([oParagraph]);
-            });
+            `;
+            
+            const func = new Function(userCode);
+            await window.Editor.callCommand(func);
+
             return { success: true, message: "Content inserted successfully" };
         } catch (error) {
             console.error("Error inserting content:", error);
@@ -71,7 +83,7 @@ class RunApiCodeCommand extends ExtensionCommand{
                 '} catch(e) {' +
                 '  return { success: false, message: e && e.message ? e.message : String(e) };' +
                 '}'+ 'Example of user code: return Api.GetFullName();',
-            `{code: "userCode"}`,
+            `{"userCode": "string"}`,
             "OnlyOffice DocX Editor",
             ""
         );
@@ -84,7 +96,7 @@ class RunApiCodeCommand extends ExtensionCommand{
                commandArg = JSON.parse(commandArg);
             }
 
-            const code = commandArg && commandArg.code;
+            const code = commandArg && commandArg.userCode;
             if (!code) {
                 return { success: false, message: "No code provided" };
             }
@@ -121,7 +133,7 @@ class RunCodeCommand extends ExtensionCommand{
                 'let version = await window.Editor.callMethod("GetVersion");'+
                 'await window.Editor.callMethod("PasteHtml", ["<span>Hello, </span><span><b>world</b></span><span>!</span>"]);'+
                 'return verion;',
-            `{code: "userCode"}`,
+            `{"userCode": "string"}`,
             "OnlyOffice DocX Editor",
             ""
         );
@@ -133,7 +145,7 @@ class RunCodeCommand extends ExtensionCommand{
                commandArg = JSON.parse(commandArg);
             }
 
-            const code = commandArg && commandArg.code;
+            const code = commandArg && commandArg.userCode;
             if (!code) {
                 return { success: false, message: "No code provided" };
             }

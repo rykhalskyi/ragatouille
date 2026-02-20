@@ -53,8 +53,23 @@ class EmailQueryCommand extends ExtensionCommand {
 
     async do(commandArg) {
         try {
-            console.log('query args:', commandArg);
-            const queryInfo = typeof commandArg === 'string' ? JSON.parse(commandArg) : commandArg;
+           
+            const parsedArgs = typeof commandArg === 'string' ? JSON.parse(commandArg) : commandArg;
+            const queryInfo = Object.fromEntries(
+                Object.entries(parsedArgs).filter(([_, value]) => {
+                    if (value === null || value === undefined) return false;
+                    if (typeof value === 'string' && value.trim() === '') return false;
+                    if (Array.isArray(value) && value.length === 0) return false;
+                    return true;
+                }).map(([key, value]) => {
+                    if ((key === 'fromDate' || key === 'toDate') && value) {
+                        return [key, new Date(value)];
+                    }
+                    return [key, value];
+                })
+            );
+
+             console.log('query args:', queryInfo);
             let messages = await messenger.messages.query(queryInfo);
             return { success: true, message: messages };
         } catch (error) {

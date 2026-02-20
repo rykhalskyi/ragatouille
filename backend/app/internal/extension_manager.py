@@ -82,7 +82,7 @@ class ExtensionManager:
             else:
                 notification_message.payload = {"client_id": client_id}
 
-            self.broadcast_message(notification_message)
+            #self.broadcast_message(notification_message)
 
             del self.clients[client_id]
             if client_id in self.client_metadata:

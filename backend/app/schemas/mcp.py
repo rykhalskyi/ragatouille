@@ -26,7 +26,7 @@ class ExtensionTool(BaseModel):
 class CallToolRequest(BaseModel):
     extension_id: str
     command_name: str
-    arguments: Dict[str, Any]
+    arguments: str
 
 class CallToolResponse(BaseModel):
     status: str

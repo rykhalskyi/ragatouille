@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Run: {{ data.command.name }}</h2>
+<mat-dialog-content class="dialog-grid">
+  <div class="inputs-section">
+    <p class="description">{{ data.command.description }}</p>
+    
+    <form [formGroup]="form" class="dynamic-form">
+      <div *ngFor="let prop of schemaProperties" class="form-field-container">
+        <mat-form-field *ngIf="prop.type !== 'boolean'" appearance="outline" class="full-width">
+          <mat-label>{{ prop.key }}</mat-label>
+          <input matInput [formControlName]="prop.key" [type]="prop.type === 'number' || prop.type === 'integer' ? 'number' : 'text'" [placeholder]="prop.description">
+          <mat-hint>{{ prop.description }}</mat-hint>
+          <mat-error *ngIf="form.get(prop.key)?.hasError('required')">This field is required</mat-error>
+        </mat-form-field>
+
+        <mat-checkbox *ngIf="prop.type === 'boolean'" [formControlName]="prop.key" class="full-width">
+          {{ prop.key }} ({{ prop.description }})
+        </mat-checkbox>
+      </div>
+    </form>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" [disabled]="form.invalid || isLoading()" (click)="onRun()">
+        <mat-spinner *ngIf="isLoading()" diameter="20" class="inline-spinner"></mat-spinner>
+        Run
+      </button>
+    </div>
+  </div>
+
+  <div class="output-section" *ngIf="output() || isLoading()">
+    <mat-label>Output</mat-label>
+    <div class="output-area">
+      <pre *ngIf="output()">{{ output() }}</pre>
+      <div *ngIf="isLoading() && !output()" class="loading-output">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Executing command...</p>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Close</button>
+</mat-dialog-actions>
