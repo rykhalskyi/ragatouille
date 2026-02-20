@@ -124,11 +124,28 @@ export class RunExtensionToolCommandDialogComponent implements OnInit {
     this.isLoading.set(true);
     this.output.set(null);
 
-    console.log('form', this.form.value);
+    const modifiedValues: any = {};
+    Object.keys(this.form.controls).forEach(key => {
+      const control = this.form.get(key);
+      if (control?.dirty) {
+        const schemaProp = this.schemaProperties.find(p => p.key === key);
+        let value: any = control.value;
+        if (schemaProp) {
+          if (schemaProp.type === 'number' || schemaProp.type === 'integer') {
+            value = Number(value);
+          } else if (schemaProp.type === 'boolean') {
+            value = Boolean(value);
+          }
+        }
+        modifiedValues[key] = value;
+      }
+    });
+
+    console.log('form modified values', modifiedValues);
     const request: CallToolRequest = {
       extension_id: this.data.extension_id,
       command_name: this.data.command.name,
-      arguments: JSON.stringify(this.form.value)
+      arguments: JSON.stringify(modifiedValues)
     };
 
     ExtensionsService.callExtensionToolExtensionsCallToolPost(request)
