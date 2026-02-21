@@ -1,1 +1,42 @@
-<p>extension-tool-details works! Tool ID: {{ toolId }}</p>
+<div class="details-container">
+  <div *ngIf="isLoading()" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading tool details...</p>
+  </div>
+
+  <div *ngIf="error()" class="error-state">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-button (click)="fetchToolDetails()">Retry</button>
+  </div>
+
+  <div *ngIf="tool() && !isLoading()" class="tool-content">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ tool()?.application_name }}</mat-card-title>
+        <mat-card-subtitle>ID: {{ tool()?.client_id }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p><strong>User Entity:</strong> {{ tool()?.user_entity_name }}</p>
+        
+        <div class="commands-section">
+          <h3>Supported Commands</h3>
+          <mat-list>
+            <mat-list-item *ngFor="let cmd of tool()?.supported_commands">
+              <span matListItemTitle>{{ cmd.name }}</span>
+              <span matListItemLine>{{ cmd.description }}</span>
+              <button mat-icon-button matListItemMeta (click)="onRunCommand(cmd)" title="Run Command">
+                <mat-icon color="primary">play_arrow</mat-icon>
+              </button>
+            </mat-list-item>
+            <p *ngIf="tool()?.supported_commands?.length === 0">No commands available.</p>
+          </mat-list>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div *ngIf="!toolId && !isLoading()" class="no-selection">
+    <p>Select an extension tool to see details.</p>
+  </div>
+</div>

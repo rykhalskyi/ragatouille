@@ -3,13 +3,23 @@ const ExtensionCommand = window.ExtensionCommand;
 // import { Editor } from './ragatouille.js';
 const Editor = window.Editor;
 
+const insertContentInputSchema = {
+    "type": "object",
+    "properties": {
+        "content" : {
+            "type" : "string",
+            "description": "Text to be inserted"
+        }
+    }
+}
+
 // Define InsertContentCommand class extending ExtensionCommand
 class InsertContentCommand extends ExtensionCommand {
     constructor() {
         super(
             "insert_content",
             "Insert HTML into document",
-            `{ "content" : "string" }`,
+            JSON.stringify(insertContentInputSchema, null, 2),
             "OnlyOffice DocX Editor",
             ""
         );
@@ -17,13 +27,25 @@ class InsertContentCommand extends ExtensionCommand {
 
     async do(commandArg) {
         try {
-            const { content } = commandArg;
-            await Editor.callCommand(function() {
+            let arg = commandArg;
+            if (typeof commandArg === "string")
+            {
+                arg = JSON.parse(arg);
+            }
+
+            const { content } = arg;
+            console.log('text to insert', arg, content);
+
+            const userCode = `
                 const oDocument = Api.GetDocument();
                 const oParagraph = Api.CreateParagraph();
-                oParagraph.AddText(content);
+                oParagraph.AddText('${content.replace(/'/g, "\\'")}');
                 oDocument.InsertContent([oParagraph]);
-            });
+            `;
+            
+            const func = new Function(userCode);
+            await window.Editor.callCommand(func);
+
             return { success: true, message: "Content inserted successfully" };
         } catch (error) {
             console.error("Error inserting content:", error);
@@ -58,6 +80,16 @@ class GetContentCommand extends ExtensionCommand {
     }
 }
 
+const runApiCodeInputSchema = {
+    "type": "object",
+    "properties": {
+        "userCode" : {
+            "type" : "string",
+            "description": "Javascript code to run. Code should use office-js-api OnlyOffice API"
+        }
+    }
+}
+
 class RunApiCodeCommand extends ExtensionCommand{
     constructor(){
         super(
@@ -71,7 +103,7 @@ class RunApiCodeCommand extends ExtensionCommand{
                 '} catch(e) {' +
                 '  return { success: false, message: e && e.message ? e.message : String(e) };' +
                 '}'+ 'Example of user code: return Api.GetFullName();',
-            `{code: "userCode"}`,
+             JSON.stringify(runApiCodeInputSchema, null, 2),
             "OnlyOffice DocX Editor",
             ""
         );
@@ -84,7 +116,7 @@ class RunApiCodeCommand extends ExtensionCommand{
                commandArg = JSON.parse(commandArg);
             }
 
-            const code = commandArg && commandArg.code;
+            const code = commandArg && commandArg.userCode;
             if (!code) {
                 return { success: false, message: "No code provided" };
             }
@@ -112,6 +144,16 @@ class RunApiCodeCommand extends ExtensionCommand{
     }
 }
 
+const runCodeInputSchema = {
+    "type": "object",
+    "properties": {
+        "userCode" : {
+            "type" : "string",
+            "description": "Javascript code to run. Code should use plugin-and-macros OnlyOffice API"
+        }
+    }
+}
+
 class RunCodeCommand extends ExtensionCommand{
         constructor(){
         super(
@@ -121,7 +163,7 @@ class RunCodeCommand extends ExtensionCommand{
                 'let version = await window.Editor.callMethod("GetVersion");'+
                 'await window.Editor.callMethod("PasteHtml", ["<span>Hello, </span><span><b>world</b></span><span>!</span>"]);'+
                 'return verion;',
-            `{code: "userCode"}`,
+            JSON.stringify(runCodeInputSchema, null, 2),
             "OnlyOffice DocX Editor",
             ""
         );
@@ -133,7 +175,7 @@ class RunCodeCommand extends ExtensionCommand{
                commandArg = JSON.parse(commandArg);
             }
 
-            const code = commandArg && commandArg.code;
+            const code = commandArg && commandArg.userCode;
             if (!code) {
                 return { success: false, message: "No code provided" };
             }

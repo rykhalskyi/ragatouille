@@ -14,6 +14,9 @@ from app.schemas.websocket import WebSocketMessage, ClientMessage
 from app.schemas.mcp import ExtensionTool, SupportedCommand
 from app.schemas.mcp import ExtensionTool, SupportedCommand
 
+import trafilatura
+
+
 class ExtensionManager:
     _instance = None
     _lock = threading.Lock()
@@ -68,21 +71,6 @@ class ExtensionManager:
     def unregister_client(self, client_id: str):
         """Unregisters a client."""
         if client_id in self.clients:
-            # Retrieve metadata before deleting
-            extension_tool_data = self.client_metadata.get(client_id)
-
-            notification_message = WebSocketMessage(
-                id=str(uuid.uuid4()),
-                timestamp=datetime.now().isoformat(),
-                topic="extension_disconnected",
-                message=f"Extension client {client_id} disconnected."
-            )
-            if extension_tool_data:
-                notification_message.payload = extension_tool_data.model_dump() # Convert Pydantic model to dict
-            else:
-                notification_message.payload = {"client_id": client_id}
-
-            self.broadcast_message(notification_message)
 
             del self.clients[client_id]
             if client_id in self.client_metadata:
@@ -267,7 +255,7 @@ class ExtensionManager:
         client_id: str, 
         command_name: str, 
         command_input: str, 
-        timeout: int = 10
+        timeout: int = 20
     ) -> Dict[str, str]:
         """
         Sends a command to a client and waits for a response with a correlation_id.
@@ -309,7 +297,18 @@ class ExtensionManager:
             
             # Wait for the future to be resolved by process_incoming_message
             response = await asyncio.wait_for(future, timeout=timeout)
-            print(f" command response: '{response}'")
+            #print(f" command response: '{response}'")
+            
+            payload = response.get("payload", {})
+            apply_filter_to = payload.get("apply_filter")
+            
+            if apply_filter_to != None:
+                message = payload.get("message")
+                content = message[0].get(apply_filter_to)
+                cleaned_content = trafilatura.extract(content)
+                message[0][apply_filter_to] = cleaned_content
+                response["payload"]["message"] = message
+
             return response
 
         except asyncio.TimeoutError:

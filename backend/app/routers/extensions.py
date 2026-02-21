@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from typing import Dict, Any, List
 from datetime import datetime
 import uuid
@@ -9,7 +9,7 @@ from functools import partial
 from app.internal.extension_manager import ExtensionManager
 from app.dependencies import get_extension_manager
 from app.schemas.websocket import WebSocketMessage, ClientMessage
-from app.schemas.mcp import ExtensionTool
+from app.schemas.mcp import ExtensionTool, CallToolRequest, CallToolResponse
 
 router = APIRouter()
 
@@ -82,3 +82,29 @@ def get_connected_extension_tools(
     Returns a list of all currently registered and connected extension tools.
     """
     return extension_manager.get_registered_extension_tools()
+
+@router.post("/call_tool", response_model=CallToolResponse)
+async def call_extension_tool(
+    request: CallToolRequest,
+    extension_manager: ExtensionManager = Depends(get_extension_manager)
+):
+    """
+    Calls a command on a connected extension tool.
+    """
+    try:
+        response = await extension_manager.send_command_and_wait_for_response(
+            request.extension_id, 
+            request.command_name, 
+            request.arguments, 
+            timeout=20
+        )
+        return CallToolResponse(
+            status="success",
+            result=response.get("payload")
+        )
+    except ConnectionError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except TimeoutError as e:
+        raise HTTPException(status_code=408, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
