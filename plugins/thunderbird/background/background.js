@@ -19,11 +19,12 @@ function connect() {
     if (!connected) {
         client = new WebSocketClient('ws://localhost:8000/extensions/ws');
 
-        client.onOpen = () => {
+        client.onOpen = async () => {
             connected = true;
             messenger.runtime.sendMessage({ command: "updateStatus", status: connected });
 
-            const payload = get_commands(entity_name);
+            let accounts = (await messenger.accounts.list()).map(account =>  account.name ).join(', ');
+            const payload = get_commands(accounts);
             client.send(JSON.stringify({ type: "ping", payload: payload }));
         };
 
