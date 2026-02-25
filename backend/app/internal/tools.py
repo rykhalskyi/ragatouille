@@ -1,11 +1,14 @@
 import chromadb
 from typing import List
 import asyncio
+import time
 from app.crud.crud_collection_content import query_collection as crud_query_collection
 from app.database import get_db_connection
-from app.crud.crud_collection import get_enabled_collections_for_mcp
+from app.crud.crud_collection import get_enabled_collections_for_mcp, get_collection_by_name, create_collection
 from app.internal.extension_manager import ExtensionManager
 from app.schemas.mcp import ExtensionTool
+from app.schemas.collection import CollectionCreate
+from app.internal.embedding_manager import get_embedder
 
 def register_tools(mcp_server, mcp_manager):
     """
@@ -27,6 +30,49 @@ def register_tools(mcp_server, mcp_manager):
         with get_db_connection() as db:
             collections = get_enabled_collections_for_mcp(db)
         return collections
+
+    @mcp_server.tool()
+    def add_fact(fact: str, summary: str) -> dict:
+        """
+        Saves a fact about the user for long-term memory.
+        - fact: The full text of the fact to remember.
+        - summary: A brief summary of the fact, used for search embeddings.
+        """
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+
+        collection_name = "agent_ltm"
+        
+        try:
+            with get_db_connection() as db:
+                collection_meta = get_collection_by_name(db, collection_name)
+                if not collection_meta:
+                    # Create it if it doesn't exist
+                    create_collection(db, CollectionCreate(
+                        name=collection_name,
+                        description="Long Term Memory for AI Agent facts about the user",
+                        enabled=True
+                    ))
+            
+            client = chromadb.PersistentClient(path="./chroma_data")
+            collection = client.get_collection(name=collection_name)
+            
+            embedder = get_embedder()
+            embedding = list(embedder.embed([summary]))[0].tolist()
+            
+            ts = int(time.time())
+            fact_id = f"fact_{ts}"
+            
+            collection.add(
+                documents=[fact],
+                embeddings=[embedding],
+                metadatas=[{"summary": summary, "ts": ts}],
+                ids=[fact_id]
+            )
+            
+            return {"status": "success", "message": f"Fact saved to {collection_name}."}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     @mcp_server.tool()
     def extension_list() -> List[dict]:

@@ -33,7 +33,6 @@ namespace Ragatool.AddIn
             WebSocketClient = new WebSocketClient("ws://localhost:8000/extensions/ws");
             WebSocketClient.OnMessage += async (webSocketMessage) =>
             {
-               // _logger.LogInformation("Received message: {Message}", webSocketMessage);
                 await _messageHub.Handle(webSocketMessage);
             };
 

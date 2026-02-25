@@ -56,6 +56,15 @@ class ExtensionManager:
         self.clients[client_id] = client_queue
         print(f"INFO: Client registered: {client_id}")
 
+        # Send an initial connection confirmation message
+        welcome_message = WebSocketMessage(
+            id=str(uuid.uuid4()),
+            timestamp=datetime.now().isoformat(),
+            topic="extension_connected",
+            message="Successfully connected to the server."
+        )
+        client_queue.put(welcome_message)
+
         if self.messag_hub != None:
             self.messag_hub.send_message("extension", MessageType.INFO, f"ExtensionTool connected")
 
