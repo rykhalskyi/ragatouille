@@ -4,7 +4,7 @@
     <div class="log-container">
      
         @for (log of logs; track logs){         
-            <div class="log-item">
+            <div class="log-item" [attr.data-testid]="TestIds.logItem">
               <p><strong>></strong> {{ log.timestamp }} {{ log.topic }} {{ log.message }}</p>
             </div>     
         }

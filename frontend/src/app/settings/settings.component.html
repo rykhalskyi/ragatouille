@@ -1,7 +1,7 @@
 <div class="settings-container">
   <div class="header">
       <h1>Settings</h1>
-      <button mat-raised-button color="primary" type="button" (click)="saveSettings()">Save</button>
+      <button mat-raised-button color="primary" type="button" (click)="saveSettings()" [attr.data-testid]="TestIds.saveSettingsButton">Save</button>
   </div>
   
   @if (settings$ | async; as settings) {
@@ -27,7 +27,8 @@
         } @else {
           <mat-slide-toggle
             [checked]="setting.value === 'true'"
-            (change)="updateSetting(setting, $event.checked.toString())">
+            (change)="updateSetting(setting, $event.checked.toString())"
+            [attr.data-testid]="setting.name === 'TwoStepImport' ? TestIds.twoStepImportSwitch : null">
             {{ setting.name }}
           </mat-slide-toggle>
         }

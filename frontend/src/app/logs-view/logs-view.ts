@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { LogStreamService } from '../log-stream.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Message } from '../client/models/Message';
+import { TestIds } from '@testing/test-ids';
 
 @UntilDestroy()
 @Component({
@@ -16,6 +17,8 @@ import { Message } from '../client/models/Message';
 })
 export class LogsViewComponent implements OnInit, OnDestroy {
   @Input() collectionId: string | undefined;
+
+  protected readonly TestIds = TestIds;
 
   private _allLogs: Message[] = [];
 

@@ -7,7 +7,7 @@
           <p>ID: {{ collectionDetails.id }}</p>
           
           @if (collectionDetails.count) {
-            <p>Count: {{ collectionDetails.count }}</p>           
+            <p [attr.data-testid]="TestIds.chunkCountText">Count: {{ collectionDetails.count }}</p>           
           }
           
           @if (collectionDetails.metadata) {

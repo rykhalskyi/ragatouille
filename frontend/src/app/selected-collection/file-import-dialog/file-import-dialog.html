@@ -11,7 +11,7 @@
       <div class="row1">
         <div class="file-input-container">
           <button mat-raised-button color="primary" type="button" (click)="fileInput.click()" 
-                  [disabled]="importForm.get('file')?.value || showProgressBar()" data-testid="pick-file-button">Pick File</button>
+                  [disabled]="importForm.get('file')?.value || showProgressBar()" [attr.data-testid]="TestIds.pickFileButton">Pick File</button>
           <input hidden type="file" #fileInput (change)="onFileSelected($event)" [accept]="fileAcceptFilter">
           <span class="file-name">{{ selectedFileName || 'No file chosen' }}</span>
           @if (importForm.get('file')?.hasError('required') && importForm.get('file')?.touched){
@@ -68,7 +68,7 @@
   </div>
   <div mat-dialog-actions>
     <button mat-button (click)="onNoClick()">Cancel</button>
-    <button mat-button color="primary" [disabled]="importForm.invalid || showProgressBar()" (click)="onImportClick()">{{ data.twoStepImport ? "Load" : "Import"}}</button>    
+    <button mat-button color="primary" [disabled]="importForm.invalid || showProgressBar()" (click)="onImportClick()" [attr.data-testid]="TestIds.importFileSubmitButton">{{ data.twoStepImport ? "Load" : "Import"}}</button>    
   </div>
  
 </div>

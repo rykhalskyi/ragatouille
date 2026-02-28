@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip'; // Import MatToolt
 import { ExtensionsStateService } from '../extensions-state.service'; // Import ExtensionsStateService
 import { ExtensionTool } from '../client/models/ExtensionTool'; // Import ExtensionTool
 import { ExtensionsRefreshService } from '../extensions-refresh.service';
-// Removed: BrowserAnimationsModule import as it might cause BrowserModule conflicts
+import { TestIds } from '../testing/test-ids';
 
 @UntilDestroy()
 @Component({
@@ -33,6 +33,7 @@ import { ExtensionsRefreshService } from '../extensions-refresh.service';
   styleUrl: './collections-list.component.scss'
 })
 export class CollectionsListComponent implements OnInit, OnDestroy {
+  protected readonly TestIds = TestIds;
   collections: Collection[] = [];
   connectedExtensions: ExtensionTool[] = []; // <-- Add this
   private refreshSubscription: Subscription;

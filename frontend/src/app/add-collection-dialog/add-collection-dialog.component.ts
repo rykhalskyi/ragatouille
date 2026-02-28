@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TestIds } from '../testing/test-ids';
 
 @Component({
   selector: 'app-add-collection-dialog',
@@ -13,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
   styleUrl: './add-collection-dialog.component.scss'
 })
 export class AddCollectionDialogComponent {
+  protected readonly TestIds = TestIds;
   collectionName: string = '';
 
   constructor(

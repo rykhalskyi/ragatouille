@@ -7,6 +7,7 @@ import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { FileImportSettings } from '../../client';
 import { MatError } from '@angular/material/form-field';
+import { TestIds } from '../../testing/test-ids';
 
 
 @Component({
@@ -26,6 +27,7 @@ import { MatError } from '@angular/material/form-field';
   styleUrl: './file-import-dialog.scss',
 })
 export class FileImportDialog implements OnInit {
+  protected readonly TestIds = TestIds;
   @ViewChild('fileInput') fileInput!: ElementRef;
 
   importForm!: FormGroup;
