@@ -5,6 +5,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog'; // Import MatDialog
 import { MatButtonModule } from '@angular/material/button';
 import { InspectDialogComponent } from '../inspect-dialog/inspect-dialog.component'; // Import InspectDialogComponent
+import { TestIds } from '../../testing/test-ids';
 
 @Component({
   selector: 'app-collection-details',
@@ -14,6 +15,7 @@ import { InspectDialogComponent } from '../inspect-dialog/inspect-dialog.compone
   styleUrls: ['./collection-details.component.scss']
 })
 export class CollectionDetailsComponent implements OnChanges{
+  protected readonly TestIds = TestIds;
   @Input() collectionDetails: CollectionDetails | null = null;
   @Input() filesImported: boolean = false;
 

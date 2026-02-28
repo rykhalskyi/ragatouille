@@ -99,7 +99,7 @@ class TestExtensionManager(unittest.TestCase):
             "description": "A test extension",
             "inputSchema": {},
             "app": "test_app",
-            "entityName": "Tester"
+            "entity": "Tester"
         }
         ping_message_data = {"type": "ping", "payload": [metadata]}
 

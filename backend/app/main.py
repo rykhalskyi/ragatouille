@@ -37,8 +37,8 @@ async def lifespan(app: FastAPI):
     # The dependency function get_extension_manager() handles DB initialization
     extension_manager = get_extension_manager() 
     # Start heartbeat if it exists and is configured
-    if hasattr(extension_manager, 'start_heartbeat') and extension_manager.heartbeat_interval_seconds > 0:
-        extension_manager.start_heartbeat()
+    #if hasattr(extension_manager, 'start_heartbeat') and extension_manager.heartbeat_interval_seconds > 0:
+    #    extension_manager.start_heartbeat()
 
     yield
     

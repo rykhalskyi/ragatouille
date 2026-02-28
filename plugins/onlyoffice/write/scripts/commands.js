@@ -206,10 +206,10 @@ const runCodeCommand = new RunCodeCommand();
 // Make a list and add these commands
 const commands = [insertContentCmd, getContentCmd, runApiCodeCommand, runCodeCommand];
 
-export function get_commands(entityName){
+export function get_commands(entity){
     for (const item of commands)
     {
-        item.entityName = entityName;
+        item.entity = entity;
         item.app = "OnlyOffice Docx Editor (Word)"
     }
 

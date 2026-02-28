@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import numpy as np
 from unittest.mock import MagicMock, AsyncMock, patch
 
 from app.internal.tools import register_tools
@@ -104,6 +105,59 @@ class TestCallExtensionTool:
 
         # Act
         result = await call_extension_func(id="ext_id", name="command_name", input={"key": "value"})
+        
+        # Assert
+        assert result == {"status": "error", "message": "MCP server is disabled."}
+
+class TestAddFactTool:
+
+    @patch('app.internal.tools.get_db_connection')
+    @patch('app.internal.tools.get_collection_by_name')
+    @patch('app.internal.tools.create_collection')
+    @patch('app.internal.tools.chromadb.PersistentClient')
+    @patch('app.internal.tools.get_embedder')
+    def test_add_fact_success(self, mock_get_embedder, mock_chroma_client, mock_create_collection, mock_get_collection_by_name, mock_get_db, captured_tools):
+        # Arrange
+        add_fact_func = captured_tools['add_fact']
+        mock_get_collection_by_name.return_value = None # Simulate collection missing
+        
+        mock_db = MagicMock()
+        mock_get_db.return_value.__enter__.return_value = mock_db
+        
+        mock_collection = MagicMock()
+        mock_chroma_client.return_value.get_collection.return_value = mock_collection
+        
+        mock_embedder = MagicMock()
+        mock_get_embedder.return_value = mock_embedder
+        mock_embedder.embed.return_value = iter([np.array([0.1, 0.2, 0.3])])
+
+        # Act
+        result = add_fact_func(fact="User likes pizza", summary="User's food preference")
+
+        # Assert
+        assert result["status"] == "success"
+        mock_create_collection.assert_called_once()
+        mock_collection.add.assert_called_once()
+        args, kwargs = mock_collection.add.call_args
+        assert kwargs['documents'] == ["User likes pizza"]
+        assert kwargs['metadatas'][0]['summary'] == "User's food preference"
+        assert 'embeddings' in kwargs
+
+    def test_add_fact_mcp_disabled(self, captured_tools, mcp_manager):
+        # Arrange
+        mcp_manager.is_enabled.return_value = False
+        tools = {}
+        class MockMcpServer:
+            def tool(self, name=None):
+                def decorator(func):
+                    tools[func.__name__] = func
+                    return func
+                return decorator
+        register_tools(MockMcpServer(), mcp_manager)
+        add_fact_func = tools['add_fact']
+
+        # Act
+        result = add_fact_func(fact="User likes pizza", summary="User's food preference")
         
         # Assert
         assert result == {"status": "error", "message": "MCP server is disabled."}

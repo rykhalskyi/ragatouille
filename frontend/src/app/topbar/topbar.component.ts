@@ -13,6 +13,7 @@ import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { TaskCenterComponent } from '../task-center/task-center.component';
 import { MatBadgeModule } from '@angular/material/badge';
+import { TestIds } from '@testing/test-ids';
 
 @Component({
   selector: 'app-topbar',
@@ -22,6 +23,7 @@ import { MatBadgeModule } from '@angular/material/badge';
   styleUrl: './topbar.component.scss'
 })
 export class TopbarComponent implements OnInit {
+  protected readonly TestIds = TestIds;
   @ViewChild('taskCenterButton', { read: ElementRef }) taskCenterButton: ElementRef | undefined;
   public taskCount = 0;
   private overlayRef: OverlayRef | null = null;

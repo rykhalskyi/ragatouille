@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Ragatool.AddIn/Ragatool.AddIn.csproj" Id="61f76d26-27b7-4955-9220-1f47ab0a37ed" />
+  <Project Path="Rumors.Desktop.Common/Ragatool.Common.csproj" />
+</Solution>

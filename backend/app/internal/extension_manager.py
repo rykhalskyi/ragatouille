@@ -1,3 +1,4 @@
+import json
 from sqlite3 import Connection
 import asyncio
 import queue
@@ -55,13 +56,14 @@ class ExtensionManager:
         self.clients[client_id] = client_queue
         print(f"INFO: Client registered: {client_id}")
 
-        notification_message = WebSocketMessage(
+        # Send an initial connection confirmation message
+        welcome_message = WebSocketMessage(
             id=str(uuid.uuid4()),
             timestamp=datetime.now().isoformat(),
             topic="extension_connected",
-            message=f"Extension client {client_id} connected."
+            message="Successfully connected to the server."
         )
-        self.send_message_to_client(client_id, notification_message)
+        client_queue.put(welcome_message)
 
         if self.messag_hub != None:
             self.messag_hub.send_message("extension", MessageType.INFO, f"ExtensionTool connected")
@@ -137,14 +139,14 @@ class ExtensionManager:
                     if isinstance(payload, list) and len(payload) > 0:
                         first_item = payload[0]
                         app_name = first_item.get("app")
-                        entity_name = first_item.get("entityName")
+                        entity_name = first_item.get("entity")
 
                         supportedCommand = []
                         for command in payload:
                             commands_data = SupportedCommand(
                                name = command.get("name"),
                                description=command.get("description"),
-                               inputSchema=command.get("input") or "no input parameters"
+                               inputSchema=command.get("input") or "{}"
                             )
                            
                             supportedCommand.append(commands_data)

@@ -6,10 +6,10 @@
         <mat-select formControlName="importType" 
         [compareWith]="compareImportTypes" 
         (selectionChange)="onImportTypeChange($event)" 
-        data-testid="import-select"
+        [attr.data-testid]="TestIds.importTypeSelect"
         >
           @for (type of importTypes; track type.name) {
-          <mat-option [value]="type">{{ type.name }}</mat-option>
+          <mat-option [value]="type" [attr.data-testid]="'import-type-option-' + type.name">{{ type.name }}</mat-option>
         }
         </mat-select>
         @if (importForm.get('importType')?.hasError('required') && importForm.get('importType')?.touched) {
@@ -21,7 +21,7 @@
       </mat-form-field>
 
       @if (!twoStepImport()){
-        <button mat-raised-button type="button" class="import-control" color="accent" (click)="openSelectedImportDialog()" [disabled]="!importForm.get('importType')?.value" data-testid="import-button">Import</button>
+        <button mat-raised-button type="button" class="import-control" color="accent" (click)="openSelectedImportDialog()" [disabled]="!importForm.get('importType')?.value" [attr.data-testid]="TestIds.importButton">Import</button>
       }
       @else {
          <button mat-raised-button type="button" class="import-control" color="accent" (click)="openSelectedImportDialog()" [disabled]="!importForm.get('importType')?.value || showProgressBar() || task()" data-testid="import-step-1-button">1. Load to files</button>
@@ -42,7 +42,7 @@
 
   </div>
  @if (showProgressBar() && task() !== undefined) {
-    <div class="import-progress-bar" data-testid="import-progress-bar">
+    <div class="import-progress-bar" [attr.data-testid]="TestIds.importProgress">
       <div class="progressbar-line">
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         <button mat-icon-button (click)="cancelTask(task()!.id)" >

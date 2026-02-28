@@ -3,12 +3,12 @@
   <img src="assets/ragatouille_logo1_sm.png" height="32" width="32" alt="logo">
     <span class="title"> Ragatool </span>
 
-    <button mat-button class="menu-button" (click)="openAddCollectionDialog()">
+    <button mat-button class="menu-button" (click)="openAddCollectionDialog()" [attr.data-testid]="TestIds.addCollectionButton">
       <mat-icon>add</mat-icon>
       Add Collection
     </button>
 
-     <button mat-button class="menu-button" (click)="settings_click()">
+     <button mat-button class="menu-button" (click)="settings_click()" [attr.data-testid]="TestIds.settingsButton">
       <mat-icon>settings</mat-icon>
       Settings
     </button>

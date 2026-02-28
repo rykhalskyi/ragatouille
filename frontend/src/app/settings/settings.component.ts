@@ -11,6 +11,7 @@ import { Setting } from '../client/models/Setting';
 import { SettingCreate } from '../client/models/SettingCreate';
 import { Observable, of } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TestIds } from '../testing/test-ids';
 
 @Component({
   selector: 'app-settings',
@@ -28,7 +29,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent implements OnInit {
-
+  protected readonly TestIds = TestIds;
   settings$: Observable<Setting[]> = of([]);
   
 

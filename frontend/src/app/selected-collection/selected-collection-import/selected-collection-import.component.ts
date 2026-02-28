@@ -27,6 +27,7 @@ import { SettingsService } from '../../settings.service';
 import { PreviewDialogComponent } from '../preview-dialog/preview-dialog.component';
 import { CollectionRefreshService } from '../../collection-refresh.service';
 import { DeleteConfirmationDialogComponent } from '../../delete-confirmation-dialog/delete-confirmation-dialog.component';
+import { TestIds } from '../../testing/test-ids';
 
 @Component({
   selector: 'app-selected-collection-import',
@@ -49,6 +50,7 @@ import { DeleteConfirmationDialogComponent } from '../../delete-confirmation-dia
 
 @UntilDestroy()
 export class SelectedCollectionImportComponent implements OnInit, OnChanges{
+  protected readonly TestIds = TestIds;
 
 
   @Input() collection: ExtendedCollection | undefined;
