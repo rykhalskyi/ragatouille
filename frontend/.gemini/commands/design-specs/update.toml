@@ -1,4 +1,4 @@
-description = "Update design-specs governing documents"
+description = "Update design-specs steering documents"
 prompt = """
 
  1. use templates .design-specs/templates/tech-template.md .design-specs/templates/structure-template.md .design-specs/templates/codestyle-template.md
