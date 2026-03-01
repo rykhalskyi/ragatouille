@@ -24,7 +24,7 @@ All 3rd party integrations (OnlyOffice, Mozilla Thunderbird, Microsoft Outlook) 
 
 To get started with Ragatool, you will need Docker or Podman installed on your system or you can run servers locally.
 
-## Build and Run the Containers
+### Build and Run the Containers
 
 1. **Navigate to the project root:**
    Open your terminal or command prompt and navigate to the root directory of the `Ragatool` project, where `docker-compose.yml` is located.
@@ -32,6 +32,41 @@ To get started with Ragatool, you will need Docker or Podman installed on your s
    This command will build the Docker images for both the backend and frontend services based on their respective `Dockerfile`s.
 
    `docker compose up -d --build`
+
+### Running with Pre-built Images (GHCR)
+
+You can also run Ragatool using the pre-built images hosted on GitHub Container Registry. Replace `OWNER` with the GitHub username/organization.
+
+1. **Create a `docker-compose.ghcr.yml` file:**
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    image: ghcr.io/OWNER/ragatool-backend:latest
+    ports:
+      - "4301:8000"
+      - "4302:8001"
+      - "4303:8002"
+    environment:
+      PYTHONUNBUFFERED: 1
+      ALLOWED_ORIGINS: http://localhost:4300
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8001"
+
+  frontend:
+    image: ghcr.io/OWNER/ragatool-frontend:latest
+    ports:
+      - "4300:80"
+    depends_on:
+      - backend
+```
+
+2. **Run the containers:**
+
+   `docker compose -f docker-compose.ghcr.yml up -d`
+
 
 - The FastAPI backend will be accessible externally on `http://localhost:4301`.
 - The Angular frontend will be accessible externally on `http://localhost:4300`.
