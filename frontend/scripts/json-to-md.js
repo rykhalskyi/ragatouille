@@ -18,12 +18,13 @@ function formatAction(step) {
     const testId = getTestId(selectors);
     const fallbackSelector = selectors && selectors[0] ? selectors[0][0] : '';
     const target = testId || fallbackSelector;
+    const formatedTarget = testId ? `'${target}'` : `"${target}"`;
 
     switch (type) {
         case 'click':
-            return `- click '${target}'`;
+            return `- click ${formatedTarget}`;
         case 'change':
-            return `- input to '${target}' '${value}'`;
+            return `- input to ${formatedTarget} '${value}'`;
         case 'keyUp':
             return null;
         case 'setViewport':
@@ -31,7 +32,7 @@ function formatAction(step) {
         case 'navigate':
             return `- navigate to '${step.url}'`;
         default:
-            return `- ${type} '${target}'`;
+            return `- ${type} ${formatedTarget}`;
     }
 }
 
