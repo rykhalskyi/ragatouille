@@ -241,6 +241,7 @@
   -->
   <ItemGroup>
     <Compile Include="Commands\GetAllAccountsCommand.cs" />
+    <Compile Include="Commands\QueryEmailCommand.cs" />
     <Compile Include="Commands\SupportedCommands.cs" />
     <Compile Include="MessageHandlers\CallCommandMessageHandler.cs" />
     <Compile Include="MessageHandlers\ErrorMessageHandler.cs" />
