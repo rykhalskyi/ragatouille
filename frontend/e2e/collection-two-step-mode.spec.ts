@@ -3,11 +3,11 @@ import * as path from 'path';
 
 import { TestIds } from '../src/app/testing/test-ids';
 
-test('2-step import Dracula collection', async ({ page }) => {
+test.describe.serial('2-step import Dracula collection', () => {
   const draculaFilePath = path.resolve(__dirname, 'text/dracula.txt');
   const lotrFilePath = path.resolve(__dirname, 'text/lotr.txt');
 
-  await test.step('Once Before tests: delete Dracula if exists', async () => {
+  test('Once Before tests: delete Dracula if exists', async ({ page }) => {
     await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     if (await collectionItem.isVisible()) {
@@ -18,7 +18,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     }
   });
 
-  await test.step('1. Add Dracula collection (2-step import)', async () => {
+  test('1. Add Dracula collection (2-step import)', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     // click 'Settings'
     await page.getByTestId(TestIds.settingsButton).click();
 
@@ -86,8 +87,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     await expect(page.getByTestId(TestIds.chunkCountText)).toBeVisible();
   });
 
-  await test.step('2. Edit Dracula description', async () => {
-    // Note: Scenario said "Lord of the ring" but meant "Dracula"
+  test('2. Edit Dracula description', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     await collectionItem.click();
 
@@ -97,7 +98,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('A story of Vlad Dracula');
   });
 
-  await test.step('3. Import file again into Dracula collection', async () => {
+  test('3. Import file again into Dracula collection', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     await collectionItem.click();
 
@@ -123,7 +125,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     await expect(page.getByTestId(TestIds.chunkCountText)).toContainText('Count: 20');
   });
 
-  await test.step('4. Rewrite Dracula description', async () => {
+  test('4. Rewrite Dracula description', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     await collectionItem.click();
 
@@ -133,7 +136,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('New updated description');
   });
 
-  await test.step('5. Cancel description editing', async () => {
+  test('5. Cancel description editing', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     await collectionItem.click();
 
@@ -143,7 +147,8 @@ test('2-step import Dracula collection', async ({ page }) => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('New updated description');
   });
 
-  await test.step('6. Delete Dracula collection', async () => {
+  test('6. Delete Dracula collection', async ({ page }) => {
+    await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula`);
     await collectionItem.click();
 

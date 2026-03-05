@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TestIds } from '../src/app/testing/test-ids';
 import path from 'path';
 
-test.describe('Dracula Popups Scenario', () => {
+test.describe('Collection Popups Scenario', () => {
     const filePath = path.resolve(__dirname, 'text/dracula.txt');
 
   test.beforeEach(async ({ page }) => {
