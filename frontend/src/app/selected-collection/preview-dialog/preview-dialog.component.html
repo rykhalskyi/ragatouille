@@ -13,7 +13,7 @@
       @if (!isLoading && !error) {
         <mat-nav-list class="scrollable-nav-list">
           @for (file of files; track file) {
-            <mat-list-item (click)="onFileSelected(file)" [matTooltip]="file.source">
+            <mat-list-item (click)="onFileSelected(file)" [matTooltip]="file.source" [attr.data-testid]="TestIds.previewDialogFileItem">
               <mat-checkbox [checked]="isFileSelected(file)" (change)="toggleFileSelection(file)" (click)="$event.stopPropagation()"></mat-checkbox>
               <span>{{ file.source }}</span>
             </mat-list-item>
@@ -36,7 +36,7 @@
         <div class="parameters">
           <mat-form-field appearance="fill">
             <mat-label>Model</mat-label>
-            <input matInput formControlName="model" placeholder="Enter model name">
+            <input matInput formControlName="model" placeholder="Enter model name" [attr.data-testid]="TestIds.modelInput">
             @if (chunkForm.get('model')?.hasError('required') && chunkForm.get('model')?.touched) {
               <mat-error>
                 Model is required.
@@ -46,7 +46,7 @@
   
           <mat-form-field appearance="fill" >
             <mat-label>Chunk Size</mat-label>
-            <input matInput type="number" formControlName="chunkSize" placeholder="Enter chunk size">
+            <input matInput type="number" formControlName="chunkSize" placeholder="Enter chunk size" [attr.data-testid]="TestIds.chunkSizeInput">
             @if (chunkForm.get('chunkSize')?.hasError('required') && chunkForm.get('chunkSize')?.touched) {
               <mat-error>
                 Chunk size is required.
@@ -61,7 +61,7 @@
   
           <mat-form-field appearance="fill">
             <mat-label>Chunk Overlap</mat-label>
-            <input matInput type="number" formControlName="chunkOverlap" placeholder="Enter chunk overlap">
+            <input matInput type="number" formControlName="chunkOverlap" placeholder="Enter chunk overlap" [attr.data-testid]="TestIds.chunkOverlapInput">
             @if (chunkForm.get('chunkOverlap')?.hasError('required') && chunkForm.get('chunkOverlap')?.touched) {
               <mat-error>
                 Chunk overlap is required.
@@ -107,8 +107,8 @@
         <p>{{ chunk() }}</p>
       </div>
       <div>
-        <button mat-button (click)="onPrevious()">prev</button>
-        <button mat-button (click)="onNext()">next</button>
+        <button mat-button (click)="onPrevious()" [attr.data-testid]="TestIds.previewDialogPrevButton">prev</button>
+        <button mat-button (click)="onNext()" [attr.data-testid]="TestIds.previewDialogNextButton">next</button>
       </div>
     </div>
   </div>

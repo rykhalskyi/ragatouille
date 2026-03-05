@@ -32,6 +32,9 @@ export const TestIds = {
 
   // ImportFileStep2In (Import File Dialog)
   pickFileButton: 'pick-file-button',
+  chunkSizeInput: 'chunk-size-input',
+  chunkOverlapInput: 'chunk-overlap-input',
+  modelInput: 'model-input',
   importFileSubmitButton: 'import-file-submit-button',
   importProgress: 'import-progress',
   chunkCountText: 'chunk-count-text',
@@ -42,6 +45,22 @@ export const TestIds = {
   previewDialogUpdateChunksButton: 'preview-dialog-update-chunks-button',
   previewDialogNoChunksCheckbox: 'preview-dialog-no-chunks-checkbox',
   previewDialogChunkTypeSelect: 'preview-dialog-chunk-type-select',
+  previewDialogNextButton: 'preview-dialog-next-button',
+  previewDialogPrevButton: 'preview-dialog-prev-button',
+  previewDialogFileItem: 'preview-dialog-file-item',
+
+  // Inspect Dialog
+  inspectButton: 'inspect-button',
+  inspectDialogTitle: 'inspect-dialog-title',
+  inspectTab: 'inspect-tab',
+  queryTab: 'query-tab',
+  inspectPrevButton: 'inspect-prev-button',
+  inspectNextButton: 'inspect-next-button',
+  queryInput: 'query-input',
+  querySendButton: 'query-send-button',
+  queryPrevDocButton: 'query-prev-doc-button',
+  queryNextDocButton: 'query-next-doc-button',
+  inspectCloseButton: 'inspect-close-button',
 
   logItem: 'log-item'
 } as const;

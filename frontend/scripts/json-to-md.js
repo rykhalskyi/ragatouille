@@ -53,7 +53,7 @@ function transformJsonToMd(jsonPath, outputPath) {
     console.log(`Output written to: ${outputPath}`);
 }
 
-const jsonPath = process.argv[2] || './e2e/scenarios/2_step_import_recording.json';
-const outputPath = process.argv[3] || './e2e/scenarios/2_step_import_recording.md';
+const jsonPath = process.argv[2];
+const outputPath = process.argv[3];
 
 transformJsonToMd(jsonPath, outputPath);
