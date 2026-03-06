@@ -25,7 +25,7 @@
         <div class="parameters">
           <mat-form-field appearance="fill" >
             <mat-label>Model</mat-label>
-            <input matInput formControlName="model" placeholder="Enter model name">
+            <input matInput formControlName="model" placeholder="Enter model name" [attr.data-testid]="TestIds.modelInput">
             @if (importForm.get('model')?.hasError('required') && importForm.get('model')?.touched) {
               <mat-error>
                 Model is required.
@@ -35,7 +35,7 @@
   
           <mat-form-field appearance="fill" >
             <mat-label>Chunk Size</mat-label>
-            <input matInput type="number" formControlName="chunkSize" placeholder="Enter chunk size">
+            <input matInput type="number" formControlName="chunkSize" placeholder="Enter chunk size" [attr.data-testid]="TestIds.chunkSizeInput">
             @if (importForm.get('chunkSize')?.hasError('required') && importForm.get('chunkSize')?.touched) {
               <mat-error>
                 Chunk size is required.
@@ -50,7 +50,7 @@
   
           <mat-form-field appearance="fill">
             <mat-label>Chunk Overlap</mat-label>
-            <input matInput type="number" formControlName="chunkOverlap" placeholder="Enter chunk overlap">
+            <input matInput type="number" formControlName="chunkOverlap" placeholder="Enter chunk overlap" [attr.data-testid]="TestIds.chunkOverlapInput">
             @if (importForm.get('chunkOverlap')?.hasError('required') && importForm.get('chunkOverlap')?.touched) {
               <mat-error>
                 Chunk overlap is required.

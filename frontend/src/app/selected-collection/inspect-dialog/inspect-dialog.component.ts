@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { CollectionsService, CollectionContentResponse, CollectionContentRequest, CollectionQueryResponse } from '../../client'; // Import CollectionsService and CollectionContentRequest
+import { TestIds } from '../../testing/test-ids';
 
 interface ChatMessage {
   sender: 'user' | 'bot';
@@ -34,7 +35,7 @@ interface ChatMessage {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InspectDialogComponent implements OnInit {
-
+  protected readonly TestIds = TestIds;
   chunk_id = signal<string>("");
   chunk = signal<string>("");
   totalPages = 0;

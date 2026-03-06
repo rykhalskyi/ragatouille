@@ -8,7 +8,8 @@ namespace Rumors.Desktop.Common.Commands
     {
         public List<IExtensionCommand> Commands { get; } = new List<IExtensionCommand>()
         {
-           new GetAllAccountsCommand()
+           new GetAllAccountsCommand(),
+           new QueryEmailCommand()
         };
 
         public IEnumerable<IExtensionCommand> CommandsAsJson(string entityName)
