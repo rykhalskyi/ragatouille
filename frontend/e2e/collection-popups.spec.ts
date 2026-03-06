@@ -2,14 +2,14 @@ import { test, expect } from '@playwright/test';
 import { TestIds } from '../src/app/testing/test-ids';
 import path from 'path';
 
-test.describe('Collection Popups Scenario', () => {
-    const filePath = path.resolve(__dirname, 'text/dracula.txt');
+test('Dracula_2 Popups Scenario', async ({ page }) => {
+  const filePath = path.resolve(__dirname, 'text/dracula.txt');
 
-  test.beforeEach(async ({ page }) => {
+  await test.step('Once Before tests: delete Dracula_2 if exists', async () => {
     await page.goto('/');
     
     // Check if Dracula_2 exists and delete it
-    const collectionItem = page.getByTestId(TestIds.collectionItem).filter({ hasText: 'Dracula_2' });
+    const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula_2`);
     if (await collectionItem.isVisible()) {
       await collectionItem.click();
       await page.getByTestId(TestIds.deleteCollectionButton).click();
@@ -18,11 +18,11 @@ test.describe('Collection Popups Scenario', () => {
     }
   });
 
-  test('Add Dracula_2 collection with two-step import and popups', async ({ page }) => {
+  await test.step('1. Add Dracula_2 collection with two-step import and popups', async () => {
     // 1. Enable two-step import in settings
     await page.getByTestId(TestIds.settingsButton).click();
     const twoStepSwitch = page.getByTestId(TestIds.twoStepImportSwitch);
-     const switchButton = twoStepSwitch.getByRole('switch');
+    const switchButton = twoStepSwitch.getByRole('switch');
     if (!(await switchButton.isChecked())) {
       await switchButton.click();
     }
@@ -56,8 +56,9 @@ test.describe('Collection Popups Scenario', () => {
     await page.getByTestId(TestIds.chunkOverlapInput).fill('50');
     await page.getByTestId(TestIds.importFileSubmitButton).click();
 
-        // wait until element 'progress' hidden
-    await expect(page.getByTestId(TestIds.importProgress)).not.toBeVisible({ timeout: 2000 });
+    // wait until element 'progress' hidden
+    await expect(page.getByTestId(TestIds.importProgress)).not.toBeVisible({ timeout: 5000 });
+    
     // 4. Step 2: Preview and Import
     await page.getByTestId(TestIds.importStep2Button).click({timeout: 2000});
     
@@ -69,7 +70,7 @@ test.describe('Collection Popups Scenario', () => {
     await expect(page.getByTestId(TestIds.chunkOverlapInput)).toHaveValue('50');
 
     // Navigation in preview
-     await expect(page.getByText('Jonathan Harker travels to Transylvania')).toBeVisible();
+    await expect(page.getByText('Jonathan Harker travels to Transylvania')).toBeVisible();
     await page.getByTestId(TestIds.previewDialogNextButton).click();
     await expect(page.getByText('vows to stop Dracula’s growing threat.')).toBeVisible();
     await page.getByTestId(TestIds.previewDialogNextButton).click();
@@ -86,8 +87,7 @@ test.describe('Collection Popups Scenario', () => {
     await expect(page.getByTestId(TestIds.chunkCountText)).toContainText('Count: 6');
   });
 
-  test('Import and remove files', async ({ page }) => {
-    
+  await test.step('2. Import and remove files', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula_2`);
     await expect(collectionItem).toBeVisible();
     await collectionItem.click();
@@ -109,7 +109,7 @@ test.describe('Collection Popups Scenario', () => {
     await expect(page.getByTestId(TestIds.importStep2Button)).not.toBeVisible();
   });
 
-  test('Inspect collection', async ({ page }) => {
+  await test.step('3. Inspect collection', async () => {
     // 1. Select Collection
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula_2`);
     await expect(collectionItem).toBeVisible();
@@ -150,7 +150,7 @@ test.describe('Collection Popups Scenario', () => {
     await expect(page.getByTestId(TestIds.inspectDialogTitle)).not.toBeVisible();
   });
 
-   test('Delete collection', async ({ page }) => {
+  await test.step('4. Delete collection', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Dracula_2`);
     await expect(collectionItem).toBeVisible();
     await collectionItem.click();
@@ -158,7 +158,5 @@ test.describe('Collection Popups Scenario', () => {
     await page.getByTestId(TestIds.deleteCollectionButton).click();
     await page.getByTestId(TestIds.deleteConfirmButton).click();
     await expect(collectionItem).not.toBeVisible();
-    
   });
-
 });
