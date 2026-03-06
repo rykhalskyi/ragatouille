@@ -3,10 +3,10 @@ import * as path from 'path';
 
 import { TestIds } from '@testing/test-ids';
 
-test.describe.serial('Add Lord of the Rings collection and import file', () => {
+test('Add Lord of the Rings collection and import file', async ({ page }) => {
   const lotrFilePath = path.resolve(__dirname, 'text/lotr.txt');
 
-  test('Once Before tests: delete Lord of the Rings if exists', async ({ page }) => {
+  await test.step('Once Before tests: delete Lord of the Rings if exists', async () => {
     await page.goto('http://localhost:4200');
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     if (await collectionItem.isVisible()) {
@@ -17,8 +17,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     }
   });
 
-  test('1. Add Lord of the ring collection', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('1. Add Lord of the ring collection', async () => {
     // click 'Settings'
     await page.getByTestId(TestIds.settingsButton).click();
 
@@ -92,8 +91,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     await expect(logItemsCount).toBe(1);
   });
 
-  test('2. Edit Lord of the ring description', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('2. Edit Lord of the ring description', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     await collectionItem.click();
 
@@ -103,8 +101,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('A story of a ring.');
   });
 
-  test('3. Import file again into Lord of the Rings collection', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('3. Import file again into Lord of the Rings collection', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     await collectionItem.click();
     await page.getByTestId(TestIds.importButton).click();
@@ -124,8 +121,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     await expect(logItemsCount).toBe(2);
   });
 
-  test('4. Rewrite Lord of the Rings description', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('4. Rewrite Lord of the Rings description', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     await collectionItem.click();
 
@@ -135,8 +131,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('New updated description');
   });
 
-  test('5. Cancel description editing', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('5. Cancel description editing', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     await collectionItem.click();
 
@@ -146,8 +141,7 @@ test.describe.serial('Add Lord of the Rings collection and import file', () => {
     await expect(page.getByTestId(TestIds.collectionDescription)).toHaveText('New updated description');
   });
 
-  test('6. Delete Lord of the Rings collection', async ({ page }) => {
-    await page.goto('http://localhost:4200');
+  await test.step('6. Delete Lord of the Rings collection', async () => {
     const collectionItem = page.getByTestId(`${TestIds.collectionItem}-Lord of the Rings`);
     await collectionItem.click();
 
