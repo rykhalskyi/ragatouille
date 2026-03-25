@@ -35,7 +35,7 @@ To get started with Ragatool, you will need Docker or Podman installed on your s
 
 ### Running with Pre-built Images (GHCR)
 
-You can also run Ragatool using the pre-built images hosted on GitHub Container Registry. Replace `OWNER` with the GitHub username/organization.
+You can also run Ragatool using the pre-built images hosted on GitHub Container Registry. 
 
 1. **Create a `docker-compose.ghcr.yml` file:**
 
@@ -44,7 +44,7 @@ version: '3.8'
 
 services:
   backend:
-    image: ghcr.io/OWNER/ragatool-backend:latest
+    image: ghcr.io/rykhalskyi/ragatool-backend:latest
     ports:
       - "4301:8000"
       - "4302:8001"
@@ -56,7 +56,7 @@ services:
       MCP_PORT: "8001"
 
   frontend:
-    image: ghcr.io/OWNER/ragatool-frontend:latest
+    image: ghcr.io/rykhalskyi/ragatool-frontend:latest
     ports:
       - "4300:80"
     depends_on:

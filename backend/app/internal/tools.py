@@ -9,6 +9,8 @@ from app.internal.extension_manager import ExtensionManager
 from app.schemas.mcp import ExtensionTool
 from app.schemas.collection import CollectionCreate
 from app.internal.embedding_manager import get_embedder
+from app.crud.crud_summary import get_summary_by_type, create_summary, edit_summary
+from app.schemas.summary import SummaryType, Summary
 
 def register_tools(mcp_server, mcp_manager):
     """
@@ -188,3 +190,149 @@ def register_tools(mcp_server, mcp_manager):
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
+        
+    ## Summary
+
+    @mcp_server.tool()
+    def get_table_of_contents(collection_name: str):
+        """
+        Retrieves TOC for the collection
+        - collection_name: name of the ChromaDB collection
+        """
+
+        collection_id = prepare_collection_name(collection_name)
+
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        with get_db_connection() as db:
+            toc_list = get_summary_by_type(db, collection_id, SummaryType.TOC)
+            if len(toc_list) > 0:
+                return {"status": "success", "toc": toc_list[0].model_dump()}
+            else:
+                return {"status": "error", "message": f"No table of contents found for collection '{collection_name}'."}
+
+    @mcp_server.tool()
+    def add_table_of_contents(collection_name: str, toc: str):
+        """
+        Add TOC for the collection
+        - collection_name: name of the ChromaDB collection
+        - toc: table of contents in string (must contain chunk ids)
+        """
+
+        collection_id = prepare_collection_name(collection_name)
+
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        new_toc = Summary(id="", collection_id=collection_id, type=SummaryType.TOC, summary=toc)
+        with get_db_connection() as db:
+            create_summary(db, new_toc)
+            return {"status": "success"}
+        
+    
+    @mcp_server.tool()
+    def update_table_of_contents(collection_name: str, toc: str):
+        """
+        Updates TOC for the collection
+        - collection_name: name of the ChromaDB collection
+        - toc: table of contents in string (must contain chunk ids)
+        """
+
+        collection_id = prepare_collection_name(collection_name)
+
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        new_toc = Summary(id="", collection_id=collection_id, type=SummaryType.TOC, summary=toc)
+        with get_db_connection() as db:
+            toc_list = get_summary_by_type(db, collection_id, SummaryType.TOC)
+            if len(toc_list) > 0:
+                edit_summary(db, toc_list[0].id, new_toc)
+                return {"status": "success"}
+            else:
+                return {"status": "error", "message": f"No table of contents found for collection '{collection_name}'."}
+
+    @mcp_server.tool()
+    def get_summary(collection_name: str, summary_type: int):
+        """
+        Retrieves a summary by type from a collection
+        - collection_name: name of the ChromaDB collection
+        - summary_type: type of summary (0: CHUNKS, 1: CHAPTER, 2: BOOK)
+        """
+        collection_id = prepare_collection_name(collection_name)
+        
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        try:
+            summary_type_enum = SummaryType(summary_type)
+        except ValueError:
+            return {"status": "error", "message": f"Invalid summary type. Must be 0-2 (CHUNKS, CHAPTER, BOOK)."}
+        
+        with get_db_connection() as db:
+            summaries = get_summary_by_type(db, collection_id, summary_type_enum)
+            if len(summaries) > 0:
+                return {"status": "success", "summary": summaries[0].model_dump()}
+            else:
+                return {"status": "error", "message": f"No summary found for type {summary_type_enum.name} in collection '{collection_name}'."}
+
+    @mcp_server.tool()
+    def add_summary(collection_name: str, summary_type: int, summary_text: str, metadata: str | None = None):
+        """
+        Adds a summary to a collection
+        - collection_name: name of the ChromaDB collection
+        - summary_type: type of summary (0: CHUNKS, 1: CHAPTER, 2: BOOK)
+        - summary_text: the summary content. must contain chunk or lower summaries ids
+        - metadata: optional metadata for the summary
+        """
+        collection_id = prepare_collection_name(collection_name)
+        
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        try:
+            summary_type_enum = SummaryType(summary_type)
+        except ValueError:
+            return {"status": "error", "message": f"Invalid summary type. Must be 0-2 (CHUNKS, CHAPTER, BOOK)."}
+        
+        try:
+            new_summary = Summary(id="", collection_id=collection_id, type=summary_type_enum, summary=summary_text, metadata=metadata)
+            with get_db_connection() as db:
+                summary_id = create_summary(db, new_summary)
+                return {"status": "success", "summary_id": summary_id}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    @mcp_server.tool()
+    def update_summary(summary_id: str, summary_type: int, summary_text: str, collection_name: str, metadata: str | None = None):
+        """
+        Updates an existing summary
+        - summary_id: the ID of the summary to update
+        - summary_type: type of summary (0: CHUNKS, 1: CHAPTER, 2: BOOK)
+        - summary_text: the new summary content. must contain chunk or lower summaries ids
+        - collection_name: name of the ChromaDB collection
+        - metadata: optional metadata for the summary
+        """
+        collection_id = prepare_collection_name(collection_name)
+        
+        if not mcp_manager.is_enabled():
+            return {"status": "error", "message": "MCP server is disabled."}
+        
+        try:
+            summary_type_enum = SummaryType(summary_type)
+        except ValueError:
+            return {"status": "error", "message": f"Invalid summary type. Must be 0-2 (CHUNKS, CHAPTER, BOOK)."}
+        
+        try:
+            updated_summary = Summary(id=summary_id, collection_id=collection_id, type=summary_type_enum, summary=summary_text, metadata=metadata)
+            with get_db_connection() as db:
+                edit_summary(db, summary_id, updated_summary)
+                return {"status": "success"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+
+    def prepare_collection_name(collection_name: str) -> str:
+        return collection_name.lower().replace(' ','_')        
+    
