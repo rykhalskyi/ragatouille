@@ -83,6 +83,16 @@ def create_tables(conn: Optional[Connection] = None):
     )
     """)
     
+    cursor.execute(""" 
+    CREATE TABLE IF NOT EXISTS summary (
+        id TEXT PRIMARY KEY,
+        collection_id TEXT,
+        type INTEGER,
+        summary TEXT,
+        metadata TEXT
+    )
+    """)
+
     conn.commit()
     if close_conn:
         conn.close()
