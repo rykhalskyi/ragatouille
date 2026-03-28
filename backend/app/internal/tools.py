@@ -266,9 +266,9 @@ def register_tools(mcp_server, mcp_manager):
                 return {"status": "error", "message": f"No table of contents found for collection '{collection_name}'."}
 
     @mcp_server.tool()
-    def get_summary(collection_name: str, summary_type: int):
+    def get_summaries(collection_name: str, summary_type: int):
         """
-        Retrieves a summary by type from a collection
+        Retrieves all summaries by type from a collection
         - collection_name: name of the ChromaDB collection
         - summary_type: type of summary (0: CHUNKS, 1: CHAPTER, 2: BOOK)
         """
@@ -285,9 +285,9 @@ def register_tools(mcp_server, mcp_manager):
         with get_db_connection() as db:
             summaries = get_summary_by_type(db, collection_id, summary_type_enum)
             if len(summaries) > 0:
-                return {"status": "success", "summary": summaries[0].model_dump()}
+                return {"status": "success", "summaries": [s.model_dump() for s in summaries]}
             else:
-                return {"status": "error", "message": f"No summary found for type {summary_type_enum.name} in collection '{collection_name}'."}
+                return {"status": "error", "message": f"No summaries found for type {summary_type_enum.name} in collection '{collection_name}'."}
 
     @mcp_server.tool()
     def add_summary(collection_name: str, summary_type: int, summary_text: str, metadata: str | None = None):

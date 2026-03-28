@@ -41,13 +41,20 @@ def test_create_summary(db_connection):
 def test_get_summary_by_type(db_connection):
     # Create multiple summaries
     crud_summary.create_summary(db_connection, Summary(id="", collection_id="col1", type=SummaryType.TOC, summary="TOC 1"))
+    crud_summary.create_summary(db_connection, Summary(id="", collection_id="col1", type=SummaryType.CHAPTER, summary="CHAPTER 1"))
+    crud_summary.create_summary(db_connection, Summary(id="", collection_id="col1", type=SummaryType.CHAPTER, summary="CHAPTER 2"))
     crud_summary.create_summary(db_connection, Summary(id="", collection_id="col1", type=SummaryType.BOOK, summary="BOOK 1"))
     crud_summary.create_summary(db_connection, Summary(id="", collection_id="col2", type=SummaryType.TOC, summary="TOC 2"))
 
     col1_toc = crud_summary.get_summary_by_type(db_connection, "col1", SummaryType.TOC)
     assert len(col1_toc) == 1
     assert col1_toc[0].summary == "TOC 1"
-
+    
+    col1_chapter = crud_summary.get_summary_by_type(db_connection, "col1", SummaryType.CHAPTER)
+    assert len(col1_chapter) == 2
+    assert col1_chapter[0].summary == "CHAPTER 1"
+    assert col1_chapter[1].summary == "CHAPTER 2"
+    
     col1_book = crud_summary.get_summary_by_type(db_connection, "col1", SummaryType.BOOK)
     assert len(col1_book) == 1
     assert col1_book[0].summary == "BOOK 1"

@@ -161,3 +161,81 @@ class TestAddFactTool:
         
         # Assert
         assert result == {"status": "error", "message": "MCP server is disabled."}
+
+class TestGetSummaryTool:
+
+    @patch('app.internal.tools.get_db_connection')
+    @patch('app.internal.tools.get_summary_by_type')
+    def test_get_summaries_returns_all_summaries(self, mock_get_summary_by_type, mock_get_db, captured_tools):
+        # Arrange
+        get_summaries_func = captured_tools['get_summaries']
+        
+        from app.schemas.summary import Summary, SummaryType
+        
+        mock_summaries = [
+            Summary(id="1", collection_id="test_col", type=SummaryType.TOC, summary="TOC 1"),
+            Summary(id="2", collection_id="test_col", type=SummaryType.TOC, summary="TOC 2"),
+        ]
+        mock_get_summary_by_type.return_value = mock_summaries
+        
+        mock_db = MagicMock()
+        mock_get_db.return_value.__enter__.return_value = mock_db
+        
+        # Act
+        result = get_summaries_func(collection_name="test_col", summary_type=2)  # 2 = SummaryType.TOC
+        
+        # Assert
+        assert result["status"] == "success"
+        assert "summaries" in result
+        assert len(result["summaries"]) == 2
+        assert result["summaries"][0]["summary"] == "TOC 1"
+        assert result["summaries"][1]["summary"] == "TOC 2"
+        mock_get_summary_by_type.assert_called_once()
+
+    @patch('app.internal.tools.get_db_connection')
+    @patch('app.internal.tools.get_summary_by_type')
+    def test_get_summaries_empty_list(self, mock_get_summary_by_type, mock_get_db, captured_tools):
+        # Arrange
+        get_summaries_func = captured_tools['get_summaries']
+        
+        mock_get_summary_by_type.return_value = []
+        
+        mock_db = MagicMock()
+        mock_get_db.return_value.__enter__.return_value = mock_db
+        
+        # Act
+        result = get_summaries_func(collection_name="test_col", summary_type=2)
+        
+        # Assert
+        assert result["status"] == "error"
+        assert "No summaries found" in result["message"]
+
+    def test_get_summaries_invalid_type(self, captured_tools):
+        # Arrange
+        get_summaries_func = captured_tools['get_summaries']
+        
+        # Act
+        result = get_summaries_func(collection_name="test_col", summary_type=99)
+        
+        # Assert
+        assert result["status"] == "error"
+        assert "Invalid summary type" in result["message"]
+
+    def test_get_summaries_mcp_disabled(self, mcp_manager):
+        # Arrange
+        mcp_manager.is_enabled.return_value = False
+        tools = {}
+        class MockMcpServer:
+            def tool(self, name=None):
+                def decorator(func):
+                    tools[func.__name__] = func
+                    return func
+                return decorator
+        register_tools(MockMcpServer(), mcp_manager)
+        get_summaries_func = tools['get_summaries']
+
+        # Act
+        result = get_summaries_func(collection_name="test_col", summary_type=2)
+        
+        # Assert
+        assert result == {"status": "error", "message": "MCP server is disabled."}
