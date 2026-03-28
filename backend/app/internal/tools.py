@@ -164,24 +164,20 @@ def register_tools(mcp_server, mcp_manager):
         try:
             # Normalize IDs into a list
             if isinstance(ids, str):
+                ids_stripped = ids.strip()
                 # Check if it's a JSON string representation of a list
-                if ids.strip().startswith('[') and ids.strip().endswith(']'):
+                if ids_stripped.startswith('[') and ids_stripped.endswith(']'):
                     try:
-                        ids = json.loads(ids)
-                        if not isinstance(ids, list):
-                            return {
-                                "status": "error",
-                                "message": "Parameter 'ids' must be a string or list of strings.",
-                            }
-                        ids = [str(i) for i in ids]
+                        parsed = json.loads(ids_stripped)
+                        if isinstance(parsed, list):
+                            ids = [str(i) for i in parsed]
+                        else:
+                            ids = [ids]
                     except json.JSONDecodeError:
-                        # If JSON parsing fails, treat it as a single ID
                         ids = [ids]
                 else:
-                    # Single ID string
                     ids = [ids]
             elif isinstance(ids, list):
-                # Ensure all elements are strings
                 ids = [str(i) for i in ids]
             else:
                 return {
@@ -360,6 +356,7 @@ def register_tools(mcp_server, mcp_manager):
         try:
             with get_db_connection() as db:
                 delete_summary_by_id(db, summary_id)
+            return {"status": "success", "message": "Summary deleted."}
         except Exception as e:       
             return {"status": "error", "message": str(e)} 
 
