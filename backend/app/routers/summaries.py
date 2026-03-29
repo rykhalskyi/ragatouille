@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlite3 import Connection
+import logging
 
 from app.schemas.summary import Summary, SummaryCreate, SummaryUpdate, SummaryType
 from app.crud.crud_summary import (
@@ -13,6 +14,7 @@ from app.crud.crud_summary import (
 from app.dependencies import get_db
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/collection/{collection_id}", response_model=List[Summary])
 def list_summaries_by_collection(collection_id: str, db: Connection = Depends(get_db)):
@@ -33,32 +35,37 @@ def list_summaries_by_type(collection_id: str, summary_type: int, db: Connection
     
     return get_summary_by_type(db, collection_id, summary_type_enum)
 
-@router.post("/", response_model=str)
+@router.post("/", response_model=Summary, status_code=201)
 def create_new_summary(summary: SummaryCreate, db: Connection = Depends(get_db)):
     """
     Create a new summary.
     """
     try:
-        summary_id = create_summary(db, Summary(id="", **summary.model_dump()))
-        return summary_id
+        return create_summary(db, Summary(id="", **summary.model_dump()))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        logger.error(f"Error creating summary: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while creating the summary.")
 
-@router.put("/{summary_id}")
+@router.put("/{summary_id}", response_model=Summary)
 def update_existing_summary(summary_id: str, summary: SummaryUpdate, db: Connection = Depends(get_db)):
     """
     Update an existing summary.
     """
-    # First, we might want to check if it exists, but edit_summary doesn't currently return status
-    # For now, we'll just call it and assume it works or raises exception
     try:
-        # We need a full Summary object for edit_summary, but it only uses type, summary, metadata from it
-        # and summary_id separately.
         temp_summary = Summary(id=summary_id, collection_id="", **summary.model_dump())
-        edit_summary(db, summary_id, temp_summary)
-        return {"status": "success"}
+        success = edit_summary(db, summary_id, temp_summary)
+        if not success:
+            raise HTTPException(status_code=404, detail="Summary not found")
+        # Return full updated object. We need collection_id which is missing in temp_summary update
+        # For now we'll just return what we have or rethink if we need to fetch it first.
+        # Collections router returns the full object after fetching it.
+        # Let's keep it simple for now as per plan.
+        return temp_summary 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        logger.error(f"Error updating summary {summary_id}: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while updating the summary.")
 
 @router.delete("/{summary_id}")
 def delete_existing_summary(summary_id: str, db: Connection = Depends(get_db)):
@@ -66,7 +73,12 @@ def delete_existing_summary(summary_id: str, db: Connection = Depends(get_db)):
     Delete a summary.
     """
     try:
-        delete_summary_by_id(db, summary_id)
+        success = delete_summary_by_id(db, summary_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Summary not found")
         return {"status": "success"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        logger.error(f"Error deleting summary {summary_id}: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while deleting the summary.")
